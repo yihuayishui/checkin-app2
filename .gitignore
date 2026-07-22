@@ -1,0 +1,31 @@
+# ── 敏感信息（禁止上传） ──
+handoff.md
+*service-account*.json
+*-firebase-adminsdk-*.json
+google-services.json
+checkinpartner-811ab-firebase-adminsdk-fbsvc-0a15f6af70.json
+*service*.json
+
+# ── 构建产物 ──
+android/app/build/
+server/node_modules/
+.gradle/
+build/
+*.apk
+*.aab
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+
+# ── 系统文件 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# ── 本地配置 ──
+local.properties
+.env
+*.local
