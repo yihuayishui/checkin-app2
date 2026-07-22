@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.checkin.partner.app-mergeDebugResources-68:/values-v23/values-v23.xml",
+            "map": [
+                {
+                    "source": "D:\\Android\\.gradle\\caches\\transforms-3\\ea3968b74fc0a1dea8ab77aa1c5e15bf\\transformed\\work-runtime-2.9.0\\res\\values-v23\\values-v23.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,121",
+                        "endColumns": "65,62",
+                        "endOffsets": "116,179"
+                    }
+                }
+            ]
+        }
+    ]
+}

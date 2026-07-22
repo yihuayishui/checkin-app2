@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">840372841413</string>
+    <string name="google_api_key" translatable="false">AIzaSyCA34NwbDXujkP25J3IDygigII7jm_xh_I</string>
+    <string name="google_app_id" translatable="false">1:840372841413:android:646b07dbb9f502cf9ab9ac</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCA34NwbDXujkP25J3IDygigII7jm_xh_I</string>
+    <string name="google_storage_bucket" translatable="false">checkinpartner-811ab.firebasestorage.app</string>
+    <string name="project_id" translatable="false">checkinpartner-811ab</string>
+</resources>

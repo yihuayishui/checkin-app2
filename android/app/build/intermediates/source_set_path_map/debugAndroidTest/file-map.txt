@@ -1,0 +1,4 @@
+com.checkin.partner.test.app-androidTest-0 D:\project\checkin-app2\android\app\build\generated\res\resValues\androidTest\debug
+com.checkin.partner.test.app-mergeDebugAndroidTestResources-1 D:\project\checkin-app2\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.checkin.partner.test.app-mergeDebugAndroidTestResources-2 D:\project\checkin-app2\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.checkin.partner.test.app-merged_res-3 D:\project\checkin-app2\android\app\build\intermediates\merged_res\debugAndroidTest

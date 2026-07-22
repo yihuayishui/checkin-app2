@@ -1,0 +1,7 @@
+#Fri Jul 17 17:18:43 CST 2026
+base.1=D\:\\project\\checkin-app2\\android\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\8\\classes.dex
+path.1=8/classes.dex
+base.0=D\:\\project\\checkin-app2\\android\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
+renamed.1=classes2.dex
+renamed.0=classes.dex
+path.0=0/classes.dex
