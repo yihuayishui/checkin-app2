@@ -132,7 +132,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (uid.isNotBlank()) {
                 ws.connect(uid)
                 setupWsListeners()
-                refreshNotifications(showAlert = true)
+                refreshNotifications()
                 uploadCurrentFcmToken()
                 uploadJpushRegId()
                 loadAvatar()
@@ -238,7 +238,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             loadVacationState()
             refreshTransactions()
             loadMakeupCards()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
             // 至少显示 1.5 秒刷新指示器，让用户感知到刷新完成
             val elapsed = System.currentTimeMillis() - startTime
             if (elapsed < 1500) {
@@ -609,27 +609,27 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private fun setupWsListeners() {
         ws.on("partner:checkin") {
             refreshDashboard()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
         }
         ws.on("points:update") {
             refreshDashboard()
         }
         ws.on("reward:sync") {
             refreshRewards()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
         }
         ws.on("pair:notification") {
             getPairStatus()
             refreshDashboard()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
         }
         ws.on("task:sync") {
             refreshTasks()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
         }
         ws.on("task:delete") {
             refreshTasks()
-            refreshNotifications(showAlert = true)
+            refreshNotifications()
         }
     }
 

@@ -1,0 +1,18 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cn.jcore.client.android"
+    android:versionCode="550"
+    android:versionName="5.5.0">
+    <uses-sdk
+        android:minSdkVersion="19"
+        android:targetSdkVersion="34" />
+
+
+    <application >
+        <meta-data
+            android:name="JCORE_VT"
+            android:value="r5500" />
+    <meta-data android:name="JCORE_MD5" android:value="1:550:7ef9ee88:296:r:" />
+
+    </application>
+
+</manifest>

@@ -34,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
     // 辅助色（用容器色模拟奶油浅黄）
     secondary = TextGray,
     onSecondary = PageBg,
-    secondaryContainer = CreamLight,
+    secondaryContainer = CreamLight.copy(alpha = 0.7f),  // 规范：搭档卡片 70% 透明
     onSecondaryContainer = TextDark,
     // 第三色（薄荷绿）
     tertiary = MintGreen,
@@ -46,7 +46,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = TextDark,
     surface = CardBg,
     onSurface = TextDark,
-    surfaceVariant = CardBg,
+    surfaceVariant = CardBg.copy(alpha = 0.75f),  // 规范：通用卡片 75% 透明
     onSurfaceVariant = TextGray,
     // 功能色
     error = DangerRed,

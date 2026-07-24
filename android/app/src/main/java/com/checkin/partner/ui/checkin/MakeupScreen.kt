@@ -36,6 +36,7 @@ fun MakeupScreen(navController: NavController, viewModel: AppViewModel) {
     val activeTasks = tasks.filter { it.status == "ACTIVE" && it.userId == currentUserId }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("补签卡", fontWeight = FontWeight.Bold) },
             navigationIcon = {

@@ -1,5 +1,6 @@
 package com.checkin.partner.ui
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -57,6 +58,7 @@ fun CheckinNavGraph(viewModel: AppViewModel = androidx.lifecycle.viewmodel.compo
     val showBottomBar = currentRoute in bottomNavRoutes
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(

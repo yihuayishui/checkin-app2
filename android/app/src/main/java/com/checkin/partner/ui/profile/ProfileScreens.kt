@@ -25,6 +25,7 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
     val poolPoints by viewModel.poolPoints.collectAsState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text("我的", fontWeight = FontWeight.Bold) },

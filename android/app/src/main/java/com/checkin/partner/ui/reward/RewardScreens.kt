@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.checkin.partner.data.entity.RewardEntity
+import com.checkin.partner.ui.components.ScaleButton
 import com.checkin.partner.ui.theme.MintGreen
 import com.checkin.partner.viewmodel.AppViewModel
 
@@ -30,6 +31,7 @@ fun RewardListScreen(navController: NavController, viewModel: AppViewModel) {
     key(rewardVersion) {
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("奖励兑换", fontWeight = FontWeight.Bold) },
             navigationIcon = {
@@ -134,7 +136,7 @@ fun RewardCard(reward: RewardEntity, poolPoints: Int, currentUserId: String,
                 // 正常操作
                 else when {
                     reward.status == "ACTIVE" && canExchange -> {
-                        Button(onClick = onExchange, modifier = Modifier.height(36.dp),
+                        ScaleButton(onClick = onExchange, modifier = Modifier.height(36.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = androidx.compose.ui.graphics.Color.White)) { Text("兑换") }
                     }
                     reward.status == "PENDING" && reward.applicantId == currentUserId -> {
@@ -146,7 +148,7 @@ fun RewardCard(reward: RewardEntity, poolPoints: Int, currentUserId: String,
                     }
                     // 待兑现：还没人申请
                 reward.status == "CONFIRMED" && reward.claimRequestedBy == null -> {
-                    Button(onClick = onClaim, modifier = Modifier.height(36.dp),
+                    ScaleButton(onClick = onClaim, modifier = Modifier.height(36.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = androidx.compose.ui.graphics.Color.White)) { Text("申请兑现") }
                 }
                 // 待兑现：我在申请中
@@ -175,6 +177,7 @@ fun RewardCreateScreen(navController: NavController, viewModel: AppViewModel) {
     var points by remember { mutableStateOf("") }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("上架奖励", fontWeight = FontWeight.Bold) },
             navigationIcon = {

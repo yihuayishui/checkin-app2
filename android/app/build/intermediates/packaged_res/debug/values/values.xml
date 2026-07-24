@@ -10,6 +10,7 @@
     <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCA34NwbDXujkP25J3IDygigII7jm_xh_I</string>
     <string name="google_storage_bucket" translatable="false">checkinpartner-811ab.firebasestorage.app</string>
     <string name="project_id" translatable="false">checkinpartner-811ab</string>
+    <style name="JPushTheme" parent="android:Theme.Translucent.NoTitleBar"/>
     <style name="Theme.CheckinPartner" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

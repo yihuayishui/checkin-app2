@@ -10,6 +10,7 @@ checkinpartner-811ab-firebase-adminsdk-fbsvc-0a15f6af70.json
 android/app/build/
 server/node_modules/
 .gradle/
+android/.gradle/
 build/
 *.apk
 *.aab
@@ -29,3 +30,13 @@ desktop.ini
 local.properties
 .env
 *.local
+
+# ── 临时文件 ──
+*.bak
+*.tmp
+test-*.js
+debug-*.js
+
+# ── ZCode ──
+.zcode/
+

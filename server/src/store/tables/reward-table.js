@@ -17,6 +17,18 @@ function findAll() {
   ).all();
 }
 
+/**
+ * 按创作者 ID 列表查询奖励
+ * @param {string[]} creatorIds
+ */
+function findByCreatorIds(creatorIds) {
+  if (!creatorIds || creatorIds.length === 0) return [];
+  const placeholders = creatorIds.map(() => '?').join(',');
+  return getDb().prepare(
+    `SELECT * FROM reward WHERE status != 'DELETED' AND creator_id IN (${placeholders}) ORDER BY created_at DESC`
+  ).all(...creatorIds);
+}
+
 function create(reward) {
   getDb().prepare(`
     INSERT INTO reward (id, creator_id, name, required_points, expires_at, status, created_at, updated_at)
@@ -73,6 +85,6 @@ function markClaimed(rewardId) {
 }
 
 module.exports = {
-  findById, findByCreatorId, findAll, create, update, remove,
+  findById, findByCreatorId, findByCreatorIds, findAll, create, update, remove,
   applyExchange, cancelExchange, confirmExchange, markClaimed,
 };

@@ -157,6 +157,14 @@ router.post('/fcm-token', auth, (req, res) => {
   res.json(success(null, 'Token 已更新'));
 });
 
+// ── 极光推送 Registration ID 上传 ──
+router.post('/jpush-reg-id', auth, (req, res) => {
+  const { regId } = req.body;
+  if (!regId) throw new ApiError(400, 'Registration ID 不能为空');
+  userTable.updateJpushRegId(req.userId, regId);
+  res.json(success(null, 'RegId 已更新'));
+});
+
 // ── 请假 ──
 router.post('/vacation/start', auth, (req, res) => {
   userTable.setVacation(req.userId, true);

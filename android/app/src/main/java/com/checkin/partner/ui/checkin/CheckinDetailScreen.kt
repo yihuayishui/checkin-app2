@@ -15,6 +15,7 @@ import com.checkin.partner.viewmodel.AppViewModel
 @Composable
 fun CheckinDetailScreen(navController: NavController, viewModel: AppViewModel, recordId: String) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("打卡详情", fontWeight = FontWeight.Bold) },
             navigationIcon = {

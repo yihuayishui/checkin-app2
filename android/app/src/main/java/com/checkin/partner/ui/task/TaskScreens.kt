@@ -37,6 +37,7 @@ fun TaskListScreen(navController: NavController, viewModel: AppViewModel) {
     LaunchedEffect(currentFilter) { viewModel.refreshTasks(currentFilter) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text("任务管理", fontWeight = FontWeight.Bold) },
@@ -205,6 +206,7 @@ fun TaskCreateScreen(navController: NavController, viewModel: AppViewModel, edit
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(if (editTaskId == null) "创建任务" else "编辑任务", fontWeight = FontWeight.Bold) },

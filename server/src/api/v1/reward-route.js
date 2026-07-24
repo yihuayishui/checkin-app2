@@ -13,9 +13,17 @@ const { sendPush } = require('../../utils/fcm');
 
 const router = Router();
 
-// ── 奖励列表 ──
+// ── 奖励列表（仅自己和搭档创建的可见） ──
 router.get('/list', auth, (req, res) => {
-  const rewards = rewardTable.findAll();
+  // 获取当前用户和其搭档的 ID
+  const visibleIds = [req.userId];
+  const pair = pairTable.findBoundByUserId(req.userId);
+  if (pair) {
+    const partnerId = pair.user_a === req.userId ? pair.user_b : pair.user_a;
+    visibleIds.push(partnerId);
+  }
+
+  const rewards = rewardTable.findByCreatorIds(visibleIds);
   const points = userTable.getPoints(req.userId);
   const poolPoints = points ? points.poolPoints : 0;
 
@@ -160,9 +168,6 @@ router.post('/:id/confirm', auth, (req, res) => {
 
     // 通知
     sendPush(applicantId, '兑换已通过', `搭档同意了「${reward.name}」的兑换申请`, req.params.id, 'reward_confirmed');
-
-    // 成就
-    achievementTable.unlock(applicantId, 'first_reward');
 
     return res.json(success({ reward: updated }, '已同意兑换，积分已扣除'));
   } else {

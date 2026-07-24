@@ -34,7 +34,9 @@ fun LoginScreen(navController: NavController, viewModel: AppViewModel) {
         }
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
+    ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -108,6 +110,7 @@ fun RegisterScreen(navController: NavController, viewModel: AppViewModel) {
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("注册", fontWeight = FontWeight.Bold) },
             navigationIcon = {

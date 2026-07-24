@@ -80,6 +80,16 @@ function setVacation(userId, isVacation) {
     .run(isVacation ? 1 : 0, userId);
 }
 
+function updateJpushRegId(userId, regId) {
+  getDb().prepare("UPDATE user SET jpush_reg_id = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(regId, userId);
+}
+
+function getJpushRegId(userId) {
+  const row = getDb().prepare('SELECT jpush_reg_id FROM user WHERE id = ?').get(userId);
+  return row ? row.jpush_reg_id : null;
+}
+
 function deleteUser(userId) {
   getDb().prepare('DELETE FROM user WHERE id = ?').run(userId);
 }
@@ -88,5 +98,6 @@ module.exports = {
   findByUsername, findById, create, search,
   getPoints, updatePoints, setPoints, setPoolPoints, deductPoolPoints,
   updatePassword, updateAvatar, updateFcmToken, getFcmToken,
+  updateJpushRegId, getJpushRegId,
   setVacation, deleteUser,
 };

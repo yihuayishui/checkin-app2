@@ -32,4 +32,8 @@ module.exports = {
   // FCM v1 API 配置
   FCM_PROJECT_ID: process.env.FCM_PROJECT_ID || 'checkinpartner-811ab',
   FCM_SERVICE_ACCOUNT_PATH: process.env.FCM_SERVICE_ACCOUNT_PATH || path.join(__dirname, '..', 'service-account.json'),
+
+  // 极光推送配置
+  JPUSH_APP_KEY: process.env.JPUSH_APP_KEY || 'e3b1041d3b96231eb2aed6c0',
+  JPUSH_MASTER_SECRET: process.env.JPUSH_MASTER_SECRET || 'c0eed6850955ad60129070a0',
 };

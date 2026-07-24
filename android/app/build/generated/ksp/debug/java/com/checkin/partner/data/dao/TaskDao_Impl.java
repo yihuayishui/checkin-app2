@@ -44,7 +44,7 @@ public final class TaskDao_Impl implements TaskDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `task` (`taskId`,`user_id`,`creator_id`,`name`,`frequency`,`point_per_check`,`start_time`,`end_time`,`is_active`,`status`,`pending_edit_by`,`pending_delete_by`,`created_at`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `task` (`taskId`,`user_id`,`creator_id`,`name`,`frequency`,`point_per_check`,`start_time`,`end_time`,`is_active`,`status`,`pending_edit_by`,`pending_delete_by`,`created_at`,`require_approval`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -80,6 +80,8 @@ public final class TaskDao_Impl implements TaskDao {
           statement.bindString(12, entity.getPendingDeleteBy());
         }
         statement.bindString(13, entity.getCreatedAt());
+        final int _tmp_1 = entity.getRequireApproval() ? 1 : 0;
+        statement.bindLong(14, _tmp_1);
       }
     };
     this.__preparedStmtOfDeleteById = new SharedSQLiteStatement(__db) {
@@ -194,6 +196,7 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfPendingEditBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_edit_by");
           final int _cursorIndexOfPendingDeleteBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_delete_by");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "created_at");
+          final int _cursorIndexOfRequireApproval = CursorUtil.getColumnIndexOrThrow(_cursor, "require_approval");
           final List<TaskEntity> _result = new ArrayList<TaskEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final TaskEntity _item;
@@ -241,7 +244,11 @@ public final class TaskDao_Impl implements TaskDao {
             }
             final String _tmpCreatedAt;
             _tmpCreatedAt = _cursor.getString(_cursorIndexOfCreatedAt);
-            _item = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt);
+            final boolean _tmpRequireApproval;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfRequireApproval);
+            _tmpRequireApproval = _tmp_1 != 0;
+            _item = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt,_tmpRequireApproval);
             _result.add(_item);
           }
           return _result;
@@ -280,6 +287,7 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfPendingEditBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_edit_by");
           final int _cursorIndexOfPendingDeleteBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_delete_by");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "created_at");
+          final int _cursorIndexOfRequireApproval = CursorUtil.getColumnIndexOrThrow(_cursor, "require_approval");
           final List<TaskEntity> _result = new ArrayList<TaskEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final TaskEntity _item;
@@ -327,7 +335,11 @@ public final class TaskDao_Impl implements TaskDao {
             }
             final String _tmpCreatedAt;
             _tmpCreatedAt = _cursor.getString(_cursorIndexOfCreatedAt);
-            _item = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt);
+            final boolean _tmpRequireApproval;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfRequireApproval);
+            _tmpRequireApproval = _tmp_1 != 0;
+            _item = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt,_tmpRequireApproval);
             _result.add(_item);
           }
           return _result;
@@ -365,6 +377,7 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfPendingEditBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_edit_by");
           final int _cursorIndexOfPendingDeleteBy = CursorUtil.getColumnIndexOrThrow(_cursor, "pending_delete_by");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "created_at");
+          final int _cursorIndexOfRequireApproval = CursorUtil.getColumnIndexOrThrow(_cursor, "require_approval");
           final TaskEntity _result;
           if (_cursor.moveToFirst()) {
             final String _tmpTaskId;
@@ -411,7 +424,11 @@ public final class TaskDao_Impl implements TaskDao {
             }
             final String _tmpCreatedAt;
             _tmpCreatedAt = _cursor.getString(_cursorIndexOfCreatedAt);
-            _result = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt);
+            final boolean _tmpRequireApproval;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfRequireApproval);
+            _tmpRequireApproval = _tmp_1 != 0;
+            _result = new TaskEntity(_tmpTaskId,_tmpUserId,_tmpCreatorId,_tmpName,_tmpFrequency,_tmpPointPerCheck,_tmpStartTime,_tmpEndTime,_tmpIsActive,_tmpStatus,_tmpPendingEditBy,_tmpPendingDeleteBy,_tmpCreatedAt,_tmpRequireApproval);
           } else {
             _result = null;
           }

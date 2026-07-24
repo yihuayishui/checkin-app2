@@ -29,6 +29,7 @@ fun PairScreen(navController: NavController, viewModel: AppViewModel) {
     LaunchedEffect(error) { error?.let { viewModel.clearError() } }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text("我的搭档", fontWeight = FontWeight.Bold) },

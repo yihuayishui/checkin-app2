@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import cn.jpush.android.api.JPushInterface
 import com.checkin.partner.data.database.AppDatabase
 import com.checkin.partner.network.api.RetrofitClient
 
@@ -21,6 +22,10 @@ class CheckinApp : Application() {
 
         // 初始化网络
         RetrofitClient.init(this)
+
+        // 初始化极光推送
+        JPushInterface.setDebugMode(true)
+        JPushInterface.init(this)
 
         // 创建通知渠道
         createNotificationChannels()

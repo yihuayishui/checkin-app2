@@ -1,9 +1,17 @@
 -- Merging decision tree log ---
+category#com.checkin.partner
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:128:17-61
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:151:17-61
+	android:name
+		INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
+		INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:128:27-58
 manifest
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-43:12
-INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-43:12
-INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-43:12
-INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-43:12
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-160:12
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-160:12
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-160:12
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:1-160:12
+MERGED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:1:1-18:12
 MERGED from [androidx.work:work-runtime-ktx:2.9.0] D:\Android\.gradle\caches\transforms-3\476021dcf35085b6c919793fe84b2529\transformed\work-runtime-ktx-2.9.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:17:1-145:12
 MERGED from [androidx.compose.material3:material3:1.1.2] D:\Android\.gradle\caches\transforms-3\bef003086ea112635c1c5add77efdedd\transformed\material3-1.1.2\AndroidManifest.xml:17:1-22:12
@@ -119,8 +127,18 @@ MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] D:\Android\.gradle\cach
 		INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
 	xmlns:android
 		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:3:11-69
+permission#com.checkin.partner.permission.JPUSH_MESSAGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:7:5-9:47
+	android:protectionLevel
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:9:9-44
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:8:9-68
+uses-permission#com.checkin.partner.permission.JPUSH_MESSAGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:11:5-84
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:11:22-81
 uses-permission#android.permission.INTERNET
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:6:5-67
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:12:5-67
 MERGED from [com.google.firebase:firebase-installations:17.2.0] D:\Android\.gradle\caches\transforms-3\2355b949cf5e23afa5536f63bbf892f1\transformed\firebase-installations-17.2.0\AndroidManifest.xml:8:5-67
 MERGED from [com.google.firebase:firebase-installations:17.2.0] D:\Android\.gradle\caches\transforms-3\2355b949cf5e23afa5536f63bbf892f1\transformed\firebase-installations-17.2.0\AndroidManifest.xml:8:5-67
 MERGED from [com.google.android.gms:play-services-cloud-messaging:17.1.0] D:\Android\.gradle\caches\transforms-3\1e4f6d0cf33e27eeb9ea625a443186a1\transformed\play-services-cloud-messaging-17.1.0\AndroidManifest.xml:8:5-67
@@ -128,9 +146,9 @@ MERGED from [com.google.android.gms:play-services-cloud-messaging:17.1.0] D:\And
 MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] D:\Android\.gradle\caches\transforms-3\50f74d154d85f52bb81a8be208e88216\transformed\transport-backend-cct-3.1.8\AndroidManifest.xml:25:5-67
 MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] D:\Android\.gradle\caches\transforms-3\50f74d154d85f52bb81a8be208e88216\transformed\transport-backend-cct-3.1.8\AndroidManifest.xml:25:5-67
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:6:22-64
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:12:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:7:5-79
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:13:5-79
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:24:5-79
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:24:5-79
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] D:\Android\.gradle\caches\transforms-3\1389846dee04cc6eb5e0852ffccb3bb0\transformed\firebase-messaging-23.4.0\AndroidManifest.xml:22:5-79
@@ -144,30 +162,54 @@ MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] D:\An
 MERGED from [com.google.android.datatransport:transport-runtime:3.1.8] D:\Android\.gradle\caches\transforms-3\c51f4ed253ead08d9053cbb1bb0f245a\transformed\transport-runtime-3.1.8\AndroidManifest.xml:22:5-79
 MERGED from [com.google.android.datatransport:transport-runtime:3.1.8] D:\Android\.gradle\caches\transforms-3\c51f4ed253ead08d9053cbb1bb0f245a\transformed\transport-runtime-3.1.8\AndroidManifest.xml:22:5-79
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:7:22-76
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:13:22-76
 uses-permission#android.permission.CAMERA
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:8:5-65
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:14:5-65
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:8:22-62
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:14:22-62
 uses-permission#android.permission.POST_NOTIFICATIONS
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:9:5-77
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:15:5-77
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] D:\Android\.gradle\caches\transforms-3\1389846dee04cc6eb5e0852ffccb3bb0\transformed\firebase-messaging-23.4.0\AndroidManifest.xml:23:5-77
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] D:\Android\.gradle\caches\transforms-3\1389846dee04cc6eb5e0852ffccb3bb0\transformed\firebase-messaging-23.4.0\AndroidManifest.xml:23:5-77
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:9:22-74
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:15:22-74
 uses-permission#android.permission.READ_EXTERNAL_STORAGE
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:10:5-11:38
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:16:5-17:38
 	android:maxSdkVersion
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:11:9-35
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:17:9-35
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:10:22-77
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:16:22-77
 uses-permission#android.permission.READ_MEDIA_IMAGES
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:12:5-76
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:18:5-76
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:12:22-73
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:18:22-73
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:20:5-76
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:20:22-73
+uses-permission#android.permission.CHANGE_WIFI_STATE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:21:5-76
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:21:22-73
+uses-permission#android.permission.VIBRATE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:22:5-66
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:22:22-63
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:23:5-24:38
+	android:maxSdkVersion
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:24:9-35
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:23:22-78
+uses-permission#android.permission.ACCESS_NOTIFICATION_POLICY
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:25:5-85
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:25:22-82
 application
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:14:5-42:19
-INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:14:5-42:19
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:27:5-159:19
+INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:27:5-159:19
+MERGED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:10:5-16:19
+MERGED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:10:5-16:19
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.5.4] D:\Android\.gradle\caches\transforms-3\c5a5e5eeeb6de3ee58b26ec075d72416\transformed\ui-tooling-release\AndroidManifest.xml:22:5-26:19
@@ -219,55 +261,245 @@ MERGED from [com.google.android.datatransport:transport-runtime:3.1.8] D:\Androi
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] D:\Android\.gradle\caches\transforms-3\bf1b21f0737ab3a32ce9443071d390f8\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:19:9-35
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:32:9-35
 	android:label
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:18:9-29
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:31:9-29
 	tools:targetApi
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:22:9-29
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:35:9-29
 	android:icon
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:17:9-43
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:30:9-43
 	android:allowBackup
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:16:9-35
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:29:9-35
 	android:theme
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:20:9-52
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:33:9-52
 	android:usesCleartextTraffic
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:21:9-44
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:34:9-44
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:15:9-35
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:28:9-35
 activity#com.checkin.partner.MainActivity
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:24:9-32:20
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:37:9-45:20
 	android:exported
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:26:13-36
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:39:13-36
 	android:theme
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:27:13-56
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:40:13-56
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:25:13-41
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:38:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:28:13-31:29
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:41:13-44:29
 action#android.intent.action.MAIN
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:29:17-69
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:42:17-69
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:29:25-66
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:42:25-66
 category#android.intent.category.LAUNCHER
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:30:17-77
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:43:17-77
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:30:27-74
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:43:27-74
 service#com.checkin.partner.network.fcm.CheckinFcmService
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:35:9-41:19
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:48:9-54:19
 	android:exported
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:37:13-37
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:50:13-37
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:36:13-58
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:49:13-58
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:38:13-40:29
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:51:13-53:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:39:17-78
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:52:17-78
 	android:name
-		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:39:25-75
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:52:25-75
+meta-data#JPUSH_APPKEY
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:57:9-60:45
+	tools:replace
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:60:13-42
+	android:value
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:59:13-53
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:58:13-40
+meta-data#JPUSH_CHANNEL
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:61:9-64:45
+	tools:replace
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:64:13-42
+	android:value
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:63:13-46
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:62:13-41
+service#cn.jpush.android.service.JCommonService
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:67:9-75:19
+	android:process
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:71:13-37
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:70:13-37
+	android:foregroundServiceType
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:69:13-60
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:68:13-67
+intent-filter#action:name:cn.jpush.android.intent.RECEIVE_MESSAGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:72:13-74:29
+action#cn.jpush.android.intent.RECEIVE_MESSAGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:73:17-82
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:73:25-79
+service#cn.jpush.android.service.PushService
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:76:9-87:19
+	android:process
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:80:13-40
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:79:13-37
+	android:foregroundServiceType
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:78:13-60
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:77:13-64
+intent-filter#action:name:cn.jpush.android.intent.PUSH_TIME+action:name:cn.jpush.android.intent.PushService+action:name:cn.jpush.android.intent.REGISTER+action:name:cn.jpush.android.intent.REPORT
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:81:13-86:29
+action#cn.jpush.android.intent.REGISTER
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:82:17-75
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:82:25-72
+action#cn.jpush.android.intent.REPORT
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:83:17-73
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:83:25-70
+action#cn.jpush.android.intent.PushService
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:84:17-78
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:84:25-75
+action#cn.jpush.android.intent.PUSH_TIME
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:85:17-76
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:85:25-73
+service#cn.jpush.android.service.DaemonService
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:88:9-92:41
+	android:process
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:92:13-38
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:91:13-37
+	android:foregroundServiceType
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:90:13-60
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:89:13-66
+receiver#cn.jpush.android.service.PushReceiver
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:93:9-101:20
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:95:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:94:13-65
+intent-filter#action:name:android.intent.action.USER_PRESENT+action:name:android.net.conn.CONNECTIVITY_CHANGE+action:name:cn.jpush.android.intent.NOTIFICATION_RECEIVED_PROXY
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:96:13-100:29
+action#cn.jpush.android.intent.NOTIFICATION_RECEIVED_PROXY
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:97:17-94
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:97:25-91
+action#android.intent.action.USER_PRESENT
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:98:17-77
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:98:25-74
+action#android.net.conn.CONNECTIVITY_CHANGE
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:99:17-79
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:99:25-76
+receiver#cn.jpush.android.service.AlarmReceiver
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:102:9-104:40
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:104:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:103:13-66
+receiver#cn.jpush.android.service.WakedResultReceiver
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:105:9-107:40
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:107:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:106:13-72
+activity#cn.jpush.android.ui.PushActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:108:9-115:20
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:110:13-37
+	android:theme
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:111:13-72
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:109:13-60
+intent-filter#action:name:cn.jpush.android.ui.PushActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:112:13-114:29
+action#cn.jpush.android.ui.PushActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:113:17-75
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:113:25-72
+activity#cn.jpush.android.ui.PopWinActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:116:9-119:75
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:118:13-37
+	android:theme
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:119:13-72
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:117:13-62
+activity#cn.jpush.android.service.JNotifyActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:120:9-130:20
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:122:13-36
+	android:theme
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:124:13-46
+	android:taskAffinity
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:123:13-36
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:121:13-68
+intent-filter#action:name:cn.jpush.android.intent.JNotifyActivity+category:name:android.intent.category.DEFAULT+category:name:com.checkin.partner
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:125:13-129:29
+action#cn.jpush.android.intent.JNotifyActivity
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:126:17-82
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:126:25-79
+category#android.intent.category.DEFAULT
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:127:17-76
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:127:27-73
+provider#cn.jpush.android.service.DataProvider
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:131:9-134:40
+	android:authorities
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:133:13-73
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:134:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:132:13-65
+provider#cn.jpush.android.service.DownloadProvider
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:135:9-138:40
+	android:authorities
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:137:13-77
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:138:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:136:13-69
+provider#cn.jpush.android.service.InitProvider
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:139:9-144:86
+	android:readPermission
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:143:13-82
+	android:authorities
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:141:13-75
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:142:13-37
+	android:writePermission
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:144:13-83
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:140:13-65
+receiver#com.checkin.partner.network.jpush.JPushReceiver
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:145:9-153:20
+	android:enabled
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:147:13-35
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:148:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:146:13-56
+intent-filter#action:name:cn.jpush.android.intent.RECEIVE_MESSAGE+category:name:com.checkin.partner
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:149:13-152:29
+receiver#com.checkin.partner.network.fcm.NotificationDismissReceiver
+ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:156:9-158:40
+	android:exported
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:158:13-37
+	android:name
+		ADDED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml:157:13-68
 uses-sdk
 INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
 INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
+MERGED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:5:5-7:41
+MERGED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:5:5-7:41
 MERGED from [androidx.work:work-runtime-ktx:2.9.0] D:\Android\.gradle\caches\transforms-3\476021dcf35085b6c919793fe84b2529\transformed\work-runtime-ktx-2.9.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.work:work-runtime-ktx:2.9.0] D:\Android\.gradle\caches\transforms-3\476021dcf35085b6c919793fe84b2529\transformed\work-runtime-ktx-2.9.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:21:5-44
@@ -482,6 +714,18 @@ MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] D:\Android\.gradle\cach
 		INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
 		INJECTED from D:\project\checkin-app2\android\app\src\main\AndroidManifest.xml
+meta-data#JCORE_VT
+ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:11:9-13:37
+	android:value
+		ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:13:13-34
+	android:name
+		ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:12:13-36
+meta-data#JCORE_MD5
+ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:14:5-81
+	android:value
+		ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:14:41-78
+	android:name
+		ADDED from [jcore-android-5.5.0.aar] D:\Android\.gradle\caches\transforms-3\2473c0e48919da80b939be739c5c49b9\transformed\jcore-android-5.5.0\AndroidManifest.xml:14:16-40
 uses-permission#android.permission.WAKE_LOCK
 ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:23:5-68
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] D:\Android\.gradle\caches\transforms-3\1389846dee04cc6eb5e0852ffccb3bb0\transformed\firebase-messaging-23.4.0\AndroidManifest.xml:24:5-68
@@ -656,10 +900,6 @@ ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transfor
 		ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:101:13-103
 intent-filter#action:name:android.net.conn.CONNECTIVITY_CHANGE
 ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:106:13-108:29
-action#android.net.conn.CONNECTIVITY_CHANGE
-ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:17-79
-	android:name
-		ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:25-76
 receiver#androidx.work.impl.background.systemalarm.RescheduleReceiver
 ADDED from [androidx.work:work-runtime:2.9.0] D:\Android\.gradle\caches\transforms-3\ea3968b74fc0a1dea8ab77aa1c5e15bf\transformed\work-runtime-2.9.0\AndroidManifest.xml:110:9-121:20
 	android:enabled

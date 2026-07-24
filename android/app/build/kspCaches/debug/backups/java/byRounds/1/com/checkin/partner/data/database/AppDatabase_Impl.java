@@ -65,12 +65,12 @@ public final class AppDatabase_Impl extends AppDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(5) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(6) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `user` (`userId` TEXT NOT NULL, `username` TEXT NOT NULL, `avatarUrl` TEXT, `personalPoints` INTEGER NOT NULL, `poolPoints` INTEGER NOT NULL, `isVacation` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, PRIMARY KEY(`userId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `pair` (`pairId` TEXT NOT NULL, `status` TEXT NOT NULL, `partnerId` TEXT, `partnerUsername` TEXT, `partnerAvatarUrl` TEXT, `requestedBy` TEXT, `unbindRequestedBy` TEXT, `createdAt` TEXT, PRIMARY KEY(`pairId`))");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `task` (`taskId` TEXT NOT NULL, `user_id` TEXT NOT NULL, `creator_id` TEXT NOT NULL, `name` TEXT NOT NULL, `frequency` TEXT NOT NULL, `point_per_check` INTEGER NOT NULL, `start_time` TEXT, `end_time` TEXT, `is_active` INTEGER NOT NULL, `status` TEXT NOT NULL, `pending_edit_by` TEXT, `pending_delete_by` TEXT, `created_at` TEXT NOT NULL, PRIMARY KEY(`taskId`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `task` (`taskId` TEXT NOT NULL, `user_id` TEXT NOT NULL, `creator_id` TEXT NOT NULL, `name` TEXT NOT NULL, `frequency` TEXT NOT NULL, `point_per_check` INTEGER NOT NULL, `start_time` TEXT, `end_time` TEXT, `is_active` INTEGER NOT NULL, `status` TEXT NOT NULL, `pending_edit_by` TEXT, `pending_delete_by` TEXT, `created_at` TEXT NOT NULL, `require_approval` INTEGER NOT NULL, PRIMARY KEY(`taskId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `checkin_record` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `record_id` TEXT NOT NULL, `task_id` TEXT NOT NULL, `user_id` TEXT NOT NULL, `checkin_time` TEXT NOT NULL, `note` TEXT, `image_url` TEXT, `is_makeup` INTEGER NOT NULL, `created_at` TEXT NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `reward` (`id` TEXT NOT NULL, `creator_id` TEXT NOT NULL, `name` TEXT NOT NULL, `required_points` INTEGER NOT NULL, `expires_at` TEXT, `status` TEXT NOT NULL, `applicant_id` TEXT, `created_at` TEXT NOT NULL, `pending_delete_by` TEXT, `claim_requested_by` TEXT, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `point_transaction` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `transaction_id` TEXT NOT NULL, `user_id` TEXT NOT NULL, `amount` INTEGER NOT NULL, `type` TEXT NOT NULL, `category` TEXT NOT NULL, `description` TEXT, `created_at` TEXT NOT NULL)");
@@ -78,7 +78,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `achievement` (`code` TEXT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT NOT NULL, `description` TEXT NOT NULL, `unlocked` INTEGER NOT NULL, `unlocked_at` TEXT, PRIMARY KEY(`code`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `user_config` (`userId` TEXT NOT NULL, `reminder_time` TEXT, `notify_checkin` INTEGER NOT NULL, `notify_reward` INTEGER NOT NULL, `notify_pair` INTEGER NOT NULL, `personal_ratio` REAL NOT NULL, `pool_ratio` REAL NOT NULL, `streak_penalty_on` INTEGER NOT NULL, `theme_mode` TEXT NOT NULL, PRIMARY KEY(`userId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd328dd315d54467cb8ad5b89a52baf3e')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '996033e8bb02fcdd4860b33e71ba73b9')");
       }
 
       @Override
@@ -170,7 +170,7 @@ public final class AppDatabase_Impl extends AppDatabase {
                   + " Expected:\n" + _infoPair + "\n"
                   + " Found:\n" + _existingPair);
         }
-        final HashMap<String, TableInfo.Column> _columnsTask = new HashMap<String, TableInfo.Column>(13);
+        final HashMap<String, TableInfo.Column> _columnsTask = new HashMap<String, TableInfo.Column>(14);
         _columnsTask.put("taskId", new TableInfo.Column("taskId", "TEXT", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTask.put("user_id", new TableInfo.Column("user_id", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTask.put("creator_id", new TableInfo.Column("creator_id", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -184,6 +184,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         _columnsTask.put("pending_edit_by", new TableInfo.Column("pending_edit_by", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTask.put("pending_delete_by", new TableInfo.Column("pending_delete_by", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTask.put("created_at", new TableInfo.Column("created_at", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsTask.put("require_approval", new TableInfo.Column("require_approval", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysTask = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesTask = new HashSet<TableInfo.Index>(0);
         final TableInfo _infoTask = new TableInfo("task", _columnsTask, _foreignKeysTask, _indicesTask);
@@ -305,7 +306,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "d328dd315d54467cb8ad5b89a52baf3e", "e98343f765b81ca18ba14da43970af66");
+    }, "996033e8bb02fcdd4860b33e71ba73b9", "d5fdd1963c21caa994f2d437cce2dcaf");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

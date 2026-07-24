@@ -1,0 +1,14 @@
+---OUT---
+---ERR---
+[eval]:1
+console.log('start');const x=require('/var/www/checkin-server-v2/server/src/utils/fcm');console.log('loaded');x.sendPush('9b541aa8-52cb-4c9e-8876-bd5fa25ed9c0','Test','Test','','test').then(()=,e.message)}).finally(()=;process.exit(0)});
+                                                                                                                                                                                               ^
+Parenthesized expression cannot be empty
+
+SyntaxError: Unexpected token ')'
+    at makeContextifyScript (node:internal/vm:185:14)
+    at compileScript (node:internal/process/execution:383:10)
+    at evalTypeScript (node:internal/process/execution:256:22)
+    at node:internal/main/eval_string:74:3
+
+Node.js v22.23.1

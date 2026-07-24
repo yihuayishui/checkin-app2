@@ -27,6 +27,7 @@ import coil.compose.AsyncImage
 import com.checkin.partner.network.dto.DashboardToday
 import com.checkin.partner.network.dto.TaskWithStatus
 import com.checkin.partner.ui.theme.MintGreen
+import com.checkin.partner.ui.components.ScaleButton
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -72,6 +73,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text("打卡搭档${if (isVacation) " 🏖️" else ""}", fontWeight = FontWeight.Bold) },
@@ -249,7 +251,7 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: () -> Un
                     Icon(Icons.Filled.Check, null); Text("已打卡")
                 }
             } else {
-                Button(onClick = onCheckin) {
+                ScaleButton(onClick = onCheckin) {
                     Text("打卡")
                 }
             }

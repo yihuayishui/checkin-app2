@@ -383,6 +383,7 @@ string tooltip_pane_description
 style DialogWindowTheme
 style FloatingDialogTheme
 style FloatingDialogWindowTheme
+style JPushTheme
 style TextAppearance_Compat_Notification
 style TextAppearance_Compat_Notification_Info
 style TextAppearance_Compat_Notification_Line2

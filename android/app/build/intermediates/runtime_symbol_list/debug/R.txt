@@ -382,15 +382,16 @@ int string tooltip_pane_description 0x7f0b006b
 int style DialogWindowTheme 0x7f0c0000
 int style FloatingDialogTheme 0x7f0c0001
 int style FloatingDialogWindowTheme 0x7f0c0002
-int style TextAppearance_Compat_Notification 0x7f0c0003
-int style TextAppearance_Compat_Notification_Info 0x7f0c0004
-int style TextAppearance_Compat_Notification_Line2 0x7f0c0005
-int style TextAppearance_Compat_Notification_Time 0x7f0c0006
-int style TextAppearance_Compat_Notification_Title 0x7f0c0007
-int style Theme_CheckinPartner 0x7f0c0008
-int style Widget_Compat_NotificationActionContainer 0x7f0c0009
-int style Widget_Compat_NotificationActionText 0x7f0c000a
-int style Widget_Support_CoordinatorLayout 0x7f0c000b
+int style JPushTheme 0x7f0c0003
+int style TextAppearance_Compat_Notification 0x7f0c0004
+int style TextAppearance_Compat_Notification_Info 0x7f0c0005
+int style TextAppearance_Compat_Notification_Line2 0x7f0c0006
+int style TextAppearance_Compat_Notification_Time 0x7f0c0007
+int style TextAppearance_Compat_Notification_Title 0x7f0c0008
+int style Theme_CheckinPartner 0x7f0c0009
+int style Widget_Compat_NotificationActionContainer 0x7f0c000a
+int style Widget_Compat_NotificationActionText 0x7f0c000b
+int style Widget_Support_CoordinatorLayout 0x7f0c000c
 int[] styleable ActivityNavigator { 0x01010003, 0x7f010000, 0x7f010007, 0x7f010008, 0x7f010033 }
 int styleable ActivityNavigator_android_name 0
 int styleable ActivityNavigator_action 1
