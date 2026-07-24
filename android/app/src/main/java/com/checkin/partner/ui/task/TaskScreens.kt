@@ -190,6 +190,9 @@ fun TaskCreateScreen(navController: NavController, viewModel: AppViewModel, edit
     val partnerId = pairStatus?.pair?.partnerId
 
     LaunchedEffect(editTaskId) { if (editTaskId != null) viewModel.refreshTasks() }
+    var assignToPartner by remember { mutableStateOf(false) }
+    var requireApproval by remember { mutableStateOf(false) }
+    LaunchedEffect(assignTo) { if (assignTo != null) assignToPartner = true }
     LaunchedEffect(editTask) {
         editTask?.let {
             name = it.name
@@ -197,10 +200,9 @@ fun TaskCreateScreen(navController: NavController, viewModel: AppViewModel, edit
             pointPerCheck = it.pointPerCheck.toString()
             startTime = it.startTime ?: ""
             endTime = it.endTime ?: ""
+            requireApproval = it.requireApproval
         }
     }
-    var assignToPartner by remember { mutableStateOf(false) }
-    LaunchedEffect(assignTo) { if (assignTo != null) assignToPartner = true }
 
     Scaffold(
         topBar = {
@@ -232,6 +234,14 @@ fun TaskCreateScreen(navController: NavController, viewModel: AppViewModel, edit
                 }
             }
 
+            // 分配给搭档时，显示"需要我确认"开关
+            if (assignToPartner) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("需要我确认后才能完成打卡", style = MaterialTheme.typography.bodyMedium)
+                    Switch(checked = requireApproval, onCheckedChange = { requireApproval = it })
+                }
+            }
+
             Text("打卡频次", style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("DAILY" to "每日", "WEEKLY" to "每周", "ONCE" to "一次性").forEach { (v, label) ->
@@ -254,6 +264,7 @@ fun TaskCreateScreen(navController: NavController, viewModel: AppViewModel, edit
                     viewModel.createTask(name, if (assignToPartner) partnerId else null, frequency,
                         pointPerCheck.toIntOrNull() ?: 10, startTime.ifBlank { null }, endTime.ifBlank { null },
                         editTaskId, editTask?.creatorId,
+                        requireApproval = assignToPartner && requireApproval,
                         onDone = { navController.popBackStack() })
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),

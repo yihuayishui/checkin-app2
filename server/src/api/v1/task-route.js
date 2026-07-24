@@ -2,6 +2,7 @@
 const { Router } = require('express');
 const uuid = require('uuid');
 const taskTable = require('../../store/tables/task-table');
+const userTable = require('../../store/tables/user-table');
 const pairTable = require('../../store/tables/pair-table');
 const auth = require('../../middleware/auth');
 const { ApiError } = require('../../middleware/error-handler');
@@ -54,7 +55,7 @@ router.get('/created-by-me', auth, (req, res) => {
 
 // ── 创建任务 ──
 router.post('/create', auth, (req, res) => {
-  const { taskId, userId, name, frequency, pointPerCheck, startTime, endTime } = req.body;
+  const { taskId, userId, name, frequency, pointPerCheck, startTime, endTime, requireApproval } = req.body;
   if (!userId || !name) throw new ApiError(400, '用户 ID 和任务名称不能为空');
 
   const task = taskTable.create({
@@ -68,14 +69,21 @@ router.post('/create', auth, (req, res) => {
     end_time: endTime || null,
     is_active: 1,
     status: 'ACTIVE',
+    require_approval: requireApproval || false,
   });
+
+  // 分配给搭档时发通知
+  if (userId !== req.userId) {
+    const username = userTable.findById(req.userId)?.username || '搭档';
+    sendPush(userId, '新任务', `${username} 给你创建了任务「${name}」`, task.task_id, 'task_assign');
+  }
 
   res.status(201).json(success({ task }, '任务创建成功'));
 });
 
 // ── 更新任务 ──
 router.put('/update', auth, (req, res) => {
-  const { taskId, name, frequency, pointPerCheck, startTime, endTime, isActive } = req.body;
+  const { taskId, name, frequency, pointPerCheck, startTime, endTime, isActive, requireApproval } = req.body;
   const existing = taskTable.findById(taskId);
   if (!existing) throw new ApiError(404, '任务不存在');
 
@@ -87,6 +95,7 @@ router.put('/update', auth, (req, res) => {
     start_time: startTime !== undefined ? startTime : existing.start_time,
     end_time: endTime !== undefined ? endTime : existing.end_time,
     is_active: isActive !== undefined ? (isActive ? 1 : 0) : existing.is_active,
+    require_approval: requireApproval !== undefined ? requireApproval : existing.require_approval,
   });
 
   console.log(`[DEBUG] PUT /update: taskId=${taskId}, reqUserId=${req.userId}, existing.user_id=${existing.user_id}, existing.creator_id=${existing.creator_id}`);

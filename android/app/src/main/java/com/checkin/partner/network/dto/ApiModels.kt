@@ -22,6 +22,8 @@ data class PointsData(val personalPoints: Int, val poolPoints: Int)
 data class SearchUser(val userId: String, val username: String, val avatarUrl: String? = null)
 data class UserProfile(val userId: String, val username: String, val avatarUrl: String?, val isVacation: Boolean = false, val createdAt: String)
 data class FcmTokenRequest(val token: String)
+data class JpushRegIdRequest(val regId: String)
+data class ImageUploadData(val url: String, val filename: String)
 
 // ── 搭档 ──
 data class PairStatus(
@@ -50,6 +52,7 @@ data class TaskCreateRequest(
     val pointPerCheck: Int = 10,
     val startTime: String? = null,
     val endTime: String? = null,
+    val requireApproval: Boolean = false,
 )
 data class TaskData(
     @SerializedName("task_id") val taskId: String,
@@ -65,6 +68,7 @@ data class TaskData(
     @SerializedName("pending_edit_by") val pendingEditBy: String? = null,
     @SerializedName("pending_delete_by") val pendingDeleteBy: String? = null,
     @SerializedName("created_at") val createdAt: String = "",
+    @SerializedName("require_approval") val requireApproval: Int = 0,
 )
 
 // ── 打卡 ──
@@ -91,6 +95,8 @@ data class CheckinCreateResult(
     val points: PointsData?,
     val personalPointsEarned: Int?,
     val poolPointsEarned: Int?,
+    val status: String? = null,
+    val message: String? = null,
 )
 
 // ── 奖励 ──
@@ -134,6 +140,10 @@ data class PartnerDashboardData(
 data class TaskWithStatus(
     val task: TaskData,
     val checkedIn: Boolean,
+    val pendingApproval: PendingApprovalInfo? = null,
+)
+data class PendingApprovalInfo(
+    val recordId: String,
 )
 data class StreakData(val myStreak: Int, val partnerStreak: Int)
 
@@ -184,6 +194,7 @@ fun TaskData.toEntity(): com.checkin.partner.data.entity.TaskEntity =
         name = name, frequency = frequency, pointPerCheck = pointPerCheck,
         startTime = startTime, endTime = endTime,
         isActive = isActive != 0, status = status, pendingEditBy = pendingEditBy, pendingDeleteBy = pendingDeleteBy, createdAt = createdAt,
+        requireApproval = requireApproval != 0,
     )
 
 fun CheckinData.toEntity(): com.checkin.partner.data.entity.CheckinRecordEntity =

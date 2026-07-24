@@ -46,6 +46,7 @@ data class TaskEntity(
     @ColumnInfo(name = "pending_edit_by") val pendingEditBy: String? = null,
     @ColumnInfo(name = "pending_delete_by") val pendingDeleteBy: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: String = "",
+    @ColumnInfo(name = "require_approval") val requireApproval: Boolean = false,
 )
 
 /** 打卡记录 */

@@ -4,6 +4,12 @@ const userTable = require('../store/tables/user-table');
 const notificationTable = require('../store/tables/notification-table');
 const fs = require('fs');
 
+// 非阻塞引用极光推送，避免冷启动时加载失败
+let sendJpush = null;
+try {
+  sendJpush = require('./jpush').sendJpush;
+} catch (_) {}
+
 let cachedToken = null;
 let tokenExpiry = 0;
 
@@ -67,12 +73,20 @@ async function getAccessToken() {
  */
 async function sendPush(userId, title, body, relatedId, type) {
   try {
-    // 先存入数据库通知
-    notificationTable.create(userId, type, title, body, relatedId);
+    // 先存入数据库通知（拿到 id 用于客户端标记已读）
+    const notif = notificationTable.create(userId, type, title, body, relatedId);
+    const notifId = notif.id;
 
-    // 检查服务帐号文件是否存在
+    // 极光推送：独立于 FCM，提前执行，确保 JPush 不受 FCM 影响
+    if (sendJpush) {
+      sendJpush(userId, title, body, relatedId, type, notifId).catch(e =>
+        console.error('[JPush] 异步推送异常:', e.message)
+      );
+    }
+
+    // FCM 推送（国内不可用，不影响 JPush）
     if (!fs.existsSync(config.FCM_SERVICE_ACCOUNT_PATH)) {
-      console.log('[FCM] 服务帐号文件不存在，跳过推送');
+      console.log('[FCM] 服务帐号文件不存在，跳过 FCM 推送');
       return;
     }
 
@@ -94,6 +108,7 @@ async function sendPush(userId, title, body, relatedId, type) {
         data: {
           type: type || 'unknown',
           relatedId: relatedId || '',
+          notifId: String(notifId),  // 传递通知 ID，用于滑出删除时标记已读
         },
       },
     };
@@ -110,6 +125,14 @@ async function sendPush(userId, title, body, relatedId, type) {
     if (!res.ok) {
       const errText = await res.text();
       console.error(`[FCM] 推送失败 (${res.status}):`, errText);
+      // 如果 token 已失效（设备卸载/重新安装），清掉它避免重复推送
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson?.error?.message === 'NotRegistered') {
+          console.log(`[FCM] Token 已失效，清空用户 ${userId} 的 FCM token`);
+          userTable.updateFcmToken(userId, null);
+        }
+      } catch (_) {}
     }
   } catch (err) {
     console.error('[FCM] 推送异常:', err.message);

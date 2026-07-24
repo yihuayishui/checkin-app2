@@ -72,9 +72,36 @@ router.post('/create', auth, (req, res) => {
     note: note || null,
     image_url: imageUrl || null,
     is_makeup: 0,
+    status: 'APPROVED',
   });
 
-  // 积分分配
+  const pair = pairTable.findBoundByUserId(userId);
+
+  // ── 需创建者确认（打卡者不是创建者时） ──
+  if (task.require_approval && task.creator_id !== userId) {
+    // 改为 PENDING 状态，等待创建者确认
+    const db = require('../../store/db-init').getDb();
+    db.prepare("UPDATE checkin_record SET status = 'PENDING' WHERE record_id = ?")
+      .run(record.record_id);
+    record.status = 'PENDING';
+
+    // 通知创建者
+    if (pair) {
+      const partnerId = pair.user_a === userId ? pair.user_b : pair.user_a;
+      // 如果创建者是搭档，才发通知
+      if (partnerId === task.creator_id) {
+        sendPush(partnerId, '打卡确认请求', `搭档完成了「${task.name}」打卡，请确认`, record.record_id, 'checkin_approval_request');
+      }
+    }
+
+    return res.status(201).json(success({
+      record,
+      status: 'PENDING',
+      message: '打卡已提交，等待搭档确认',
+    }, '打卡已提交，等待搭档确认'));
+  }
+
+  // ── 正常流程：发放积分 ──
   const totalPoints = task.point_per_check || 10;
   const userConfig = configTable.getConfig(userId);
   const personalPoints = Math.floor(totalPoints * userConfig.personalRatio);
@@ -91,7 +118,6 @@ router.post('/create', auth, (req, res) => {
   }
 
   // 同步搭档奖励池
-  const pair = pairTable.findBoundByUserId(userId);
   if (pair) {
     const partnerId = pair.user_a === userId ? pair.user_b : pair.user_a;
     userTable.setPoolPoints(partnerId, updatedPoints.poolPoints);
@@ -100,36 +126,44 @@ router.post('/create', auth, (req, res) => {
     sendPush(partnerId, '搭档打卡了！', `完成了「${task.name}」打卡`, record.record_id, 'checkin');
   }
 
-    // 断签惩罚检查
-    if (userConfig.streakPenaltyOn && userConfig.streakPenaltyDays > 0) {
-      const dates = checkinTable.findDistinctDaysSince(userId, '2000-01-01');
-      if (dates.length > 0) {
-        const lastDate = new Date(dates[0].date);
-        const todayDate = new Date(today());
-        const diffDays = Math.floor((todayDate - lastDate) / 86400000);
-        if (diffDays > 1 && diffDays >= userConfig.streakPenaltyDays) {
-          const penalty = Math.min(10, userTable.getPoints(userId)?.poolPoints || 0);
-          if (penalty > 0) {
-            userTable.updatePoints(userId, 0, -penalty);
-            pointTable.create({ userId, amount: penalty, type: 'SPEND', category: 'PENALTY',
-              description: `断签惩罚：连续${diffDays}天未打卡` });
-            notificationTable.create(userId, 'penalty', '断签惩罚',
-              `连续${diffDays}天未打卡，扣除奖励池${penalty}分`, null);
-          }
+  // 断签惩罚检查
+  if (userConfig.streakPenaltyOn && userConfig.streakPenaltyDays > 0) {
+    const dates = checkinTable.findDistinctDaysSince(userId, '2000-01-01');
+    if (dates.length > 0) {
+      const lastDate = new Date(dates[0].date);
+      const todayDate = new Date(today());
+      const diffDays = Math.floor((todayDate - lastDate) / 86400000);
+      if (diffDays > 1 && diffDays >= userConfig.streakPenaltyDays) {
+        const penalty = Math.min(10, userTable.getPoints(userId)?.poolPoints || 0);
+        if (penalty > 0) {
+          userTable.updatePoints(userId, 0, -penalty);
+          pointTable.create({ userId, amount: penalty, type: 'SPEND', category: 'PENALTY',
+            description: `断签惩罚：连续${diffDays}天未打卡` });
+          notificationTable.create(userId, 'penalty', '断签惩罚',
+            `连续${diffDays}天未打卡，扣除奖励池${penalty}分`, null);
         }
       }
     }
+  }
 
-    // 一次性任务完成后自动标记
-    if (task.frequency === 'ONCE') {
-      taskTable.markDone(taskId);
-    }
+  // 一次性任务完成后自动标记
+  if (task.frequency === 'ONCE') {
+    taskTable.markDone(taskId);
+  }
 
   // 成就检查
   const totalDays = checkinTable.countTotalDays(userId);
   const streak = calcStreak(userId);
   achievementTable.checkTotalDaysAchievement(userId, totalDays);
   achievementTable.checkStreakAchievements(userId, streak);
+
+  // 同天打卡成就检查
+  if (pair) {
+    const partnerId = pair.user_a === userId ? pair.user_b : pair.user_a;
+    const sameDayCount = checkinTable.countSameDayWithPartner(userId, partnerId);
+    achievementTable.checkSameDayAchievements(userId, sameDayCount);
+    achievementTable.checkSameDayAchievements(partnerId, sameDayCount);
+  }
 
   // WebSocket 广播
   if (getIO) {
@@ -143,6 +177,72 @@ router.post('/create', auth, (req, res) => {
     personalPointsEarned: personalPoints,
     poolPointsEarned: poolPoints,
   }, '打卡成功'));
+});
+
+// ── 同意打卡（创建者确认搭档的打卡） ──
+router.post('/:id/approve', auth, (req, res) => {
+  const record = checkinTable.findByRecordId(req.params.id);
+  if (!record) throw new ApiError(404, '打卡记录不存在');
+  if (record.status !== 'PENDING') throw new ApiError(400, '该打卡无需确认');
+
+  const task = taskTable.findById(record.task_id);
+  if (!task) throw new ApiError(404, '关联任务不存在');
+  if (task.creator_id !== req.userId) throw new ApiError(403, '只有创建者可以确认打卡');
+
+  // 状态改为 APPROVED
+  checkinTable.approveRecord(record.record_id);
+
+  // 发放积分（给打卡者）
+  const totalPoints = task.point_per_check || 10;
+  const userConfig = configTable.getConfig(record.user_id);
+  const personalPoints = Math.floor(totalPoints * userConfig.personalRatio);
+  const poolPoints = totalPoints - personalPoints;
+
+  const updatedPoints = userTable.updatePoints(record.user_id, personalPoints, poolPoints);
+
+  // 积分流水
+  if (personalPoints > 0) {
+    pointTable.create({ userId: record.user_id, amount: personalPoints, type: 'EARN', category: 'CHECKIN', description: `打卡确认: ${task.name}` });
+  }
+  if (poolPoints > 0) {
+    pointTable.create({ userId: record.user_id, amount: poolPoints, type: 'EARN', category: 'CHECKIN_POOL', description: `奖励池确认: ${task.name}` });
+  }
+
+  // 同步搭档奖励池
+  const pair = pairTable.findBoundByUserId(record.user_id);
+  if (pair) {
+    const partnerId = pair.user_a === record.user_id ? pair.user_b : pair.user_a;
+    userTable.setPoolPoints(partnerId, updatedPoints.poolPoints);
+  }
+
+  // 通知打卡者
+  sendPush(record.user_id, '打卡已确认', `搭档确认了「${task.name}」的打卡记录`, record.record_id, 'checkin_approval_accepted');
+
+  // WebSocket 广播
+  if (getIO) {
+    const { broadcastPointsUpdate } = require('../../ws/socket-handler');
+    broadcastPointsUpdate(getIO(), record.user_id, updatedPoints);
+  }
+
+  res.json(success({ record: checkinTable.findByRecordId(record.record_id), points: updatedPoints }, '已确认打卡'));
+});
+
+// ── 拒绝打卡（创建者拒绝搭档的打卡） ──
+router.post('/:id/reject', auth, (req, res) => {
+  const record = checkinTable.findByRecordId(req.params.id);
+  if (!record) throw new ApiError(404, '打卡记录不存在');
+  if (record.status !== 'PENDING') throw new ApiError(400, '该打卡无需确认');
+
+  const task = taskTable.findById(record.task_id);
+  if (!task) throw new ApiError(404, '关联任务不存在');
+  if (task.creator_id !== req.userId) throw new ApiError(403, '只有创建者可以拒绝打卡');
+
+  checkinTable.rejectRecord(record.record_id);
+
+  // 通知打卡者
+  sendPush(record.user_id, '打卡被拒绝', `搭档拒绝了「${task.name}」的打卡记录`, record.record_id, 'checkin_approval_rejected');
+
+  res.json(success({ record: checkinTable.findByRecordId(record.record_id) }, '已拒绝打卡'));
 });
 
 // ── 删除打卡（撤回） ──

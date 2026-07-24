@@ -21,10 +21,10 @@ function findByUserAndDate(userId, dateStr) {
   ).all(userId, `${dateStr}%`);
 }
 
-/** 查询某任务今天是否已打卡 */
+/** 查询某任务今天是否已打卡（排除已拒绝的记录，允许重打） */
 function findTodayByTaskAndUser(taskId, userId, dateStr) {
   return getDb().prepare(
-    "SELECT * FROM checkin_record WHERE task_id = ? AND user_id = ? AND checkin_time LIKE ? AND is_makeup = 0 LIMIT 1"
+    "SELECT * FROM checkin_record WHERE task_id = ? AND user_id = ? AND checkin_time LIKE ? AND is_makeup = 0 AND status != 'REJECTED' LIMIT 1"
   ).get(taskId, userId, `${dateStr}%`);
 }
 
@@ -36,10 +36,11 @@ function findTodayByUser(userId, dateStr) {
 
 function create(record) {
   getDb().prepare(`
-    INSERT INTO checkin_record (record_id, task_id, user_id, checkin_time, note, image_url, is_makeup, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    INSERT INTO checkin_record (record_id, task_id, user_id, checkin_time, note, image_url, is_makeup, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `).run(record.record_id, record.task_id, record.user_id, record.checkin_time,
-    record.note || null, record.image_url || null, record.is_makeup || 0);
+    record.note || null, record.image_url || null, record.is_makeup || 0,
+    record.status || 'APPROVED');
   return findByRecordId(record.record_id);
 }
 
@@ -98,9 +99,36 @@ function countSameDayWithPartner(userId, partnerId) {
   return row ? row.count : 0;
 }
 
+/** 查找创建者待确认的打卡（创建者需要同意/拒绝的） */
+function findPendingByCreator(creatorId) {
+  return getDb().prepare(`
+    SELECT cr.* FROM checkin_record cr
+    JOIN task t ON cr.task_id = t.task_id
+    WHERE t.creator_id = ? AND cr.status = 'PENDING'
+    ORDER BY cr.checkin_time DESC
+  `).all(creatorId);
+}
+
+/** 同意打卡：status = APPROVED */
+function approveRecord(recordId) {
+  getDb().prepare(
+    "UPDATE checkin_record SET status = 'APPROVED' WHERE record_id = ?"
+  ).run(recordId);
+  return findByRecordId(recordId);
+}
+
+/** 拒绝打卡：status = REJECTED */
+function rejectRecord(recordId) {
+  getDb().prepare(
+    "UPDATE checkin_record SET status = 'REJECTED' WHERE record_id = ?"
+  ).run(recordId);
+  return findByRecordId(recordId);
+}
+
 module.exports = {
   findById, findByRecordId, findByUserId, findByUserAndDate,
   findTodayByTaskAndUser, findTodayByUser, create, deleteByRecordId,
   countDistinctDaysInMonth, findDistinctDaysSince, findDatesInMonth,
   findSince, countTotalDays, countSameDayWithPartner,
+  findPendingByCreator, approveRecord, rejectRecord,
 };

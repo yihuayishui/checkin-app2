@@ -145,6 +145,11 @@ function createTables() {
   // 任务编辑确认
   try { db.exec("ALTER TABLE task ADD COLUMN pending_edit_by TEXT"); } catch(e) {}
   try { db.exec("ALTER TABLE task ADD COLUMN pending_edit_data TEXT"); } catch(e) {}
+  // 极光推送注册 ID
+  try { db.exec("ALTER TABLE user ADD COLUMN jpush_reg_id TEXT"); } catch(e) {}
+  // 打卡需创建者确认
+  try { db.exec("ALTER TABLE task ADD COLUMN require_approval INTEGER NOT NULL DEFAULT 0"); } catch(e) {}
+  try { db.exec("ALTER TABLE checkin_record ADD COLUMN status TEXT NOT NULL DEFAULT 'APPROVED'"); } catch(e) {}
 
   // ── 积分流水表 ──
   db.exec(`

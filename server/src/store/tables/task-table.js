@@ -35,23 +35,24 @@ function findCreatedByPartner(userId, partnerId) {
 
 function create(task) {
   getDb().prepare(`
-    INSERT INTO task (task_id, user_id, creator_id, name, frequency, point_per_check, start_time, end_time, is_active, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    INSERT INTO task (task_id, user_id, creator_id, name, frequency, point_per_check, start_time, end_time, is_active, status, require_approval, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
   `).run(
     task.task_id, task.user_id, task.creator_id, task.name,
     task.frequency || 'DAILY', task.point_per_check || 10,
     task.start_time || null, task.end_time || null,
     task.is_active !== undefined ? (task.is_active ? 1 : 0) : 1,
-    task.status || 'ACTIVE'
+    task.status || 'ACTIVE',
+    task.require_approval ? 1 : 0
   );
   return findById(task.task_id);
 }
 
 function update(task) {
   getDb().prepare(`
-    UPDATE task SET name=?, frequency=?, point_per_check=?, start_time=?, end_time=?, is_active=?, updated_at=datetime('now')
+    UPDATE task SET name=?, frequency=?, point_per_check=?, start_time=?, end_time=?, is_active=?, require_approval=?, updated_at=datetime('now')
     WHERE task_id=?
-  `).run(task.name, task.frequency, task.point_per_check, task.start_time, task.end_time, task.is_active, task.task_id);
+  `).run(task.name, task.frequency, task.point_per_check, task.start_time, task.end_time, task.is_active, task.require_approval ? 1 : 0, task.task_id);
   return findById(task.task_id);
 }
 

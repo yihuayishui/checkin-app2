@@ -1,6 +1,8 @@
 package com.checkin.partner.network.api
 
 import com.checkin.partner.network.dto.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -26,8 +28,16 @@ interface ApiService {
     @POST("api/v1/user/fcm-token")
     suspend fun uploadFcmToken(@Body req: FcmTokenRequest): Response<ApiResponse<Any>>
 
+    @POST("api/v1/user/jpush-reg-id")
+    suspend fun uploadJpushRegId(@Body req: JpushRegIdRequest): Response<ApiResponse<Any>>
+
     @PUT("api/v1/user/avatar")
     suspend fun updateAvatar(@Body body: Map<String, String>): Response<ApiResponse<Any>>
+
+    // ── 图片上传 ──
+    @Multipart
+    @POST("api/v1/upload/image")
+    suspend fun uploadImage(@Part image: MultipartBody.Part): Response<ApiResponse<ImageUploadData>>
 
     @PUT("api/v1/user/password")
     suspend fun changePassword(@Body body: Map<String, String>): Response<ApiResponse<Any>>
@@ -116,6 +126,12 @@ interface ApiService {
     @GET("api/v1/checkin/{id}/comments")
     suspend fun getComments(@Path("id") id: String): Response<ApiResponse<Any>>
 
+    @POST("api/v1/checkin/{id}/approve")
+    suspend fun approveCheckin(@Path("id") id: String): Response<ApiResponse<CheckinApproveResult>>
+
+    @POST("api/v1/checkin/{id}/reject")
+    suspend fun rejectCheckin(@Path("id") id: String): Response<ApiResponse<CheckinApproveResult>>
+
     // ── 奖励 ──
     @GET("api/v1/reward/list")
     suspend fun getRewards(): Response<ApiResponse<RewardList>>
@@ -201,12 +217,22 @@ data class SearchResult(val users: List<SearchUser>)
 data class TaskList(val tasks: List<TaskData>)
 data class TaskResult(val task: TaskData)
 data class CheckinList(val records: List<CheckinData>)
+data class CheckinApproveResult(val record: CheckinData, val points: PointsData? = null)
 data class RewardList(val rewards: List<RewardData>, val poolPoints: Int)
 data class RewardResult(val reward: RewardData)
 data class CalendarData(val month: String, val myDates: List<String>, val partnerDates: List<String>)
 data class StatsData(val month: String, val myDays: Int, val partnerDays: Int)
 data class TransactionList(val transactions: List<TransactionData>)
-data class AchievementList(val achievements: List<Any>)
+data class AchievementList(val achievements: List<AchievementData>)
+data class AchievementData(
+    val code: String,
+    val name: String,
+    val icon: String,
+    val desc: String,
+    val group: String = "personal",
+    val unlocked: Boolean = false,
+    val unlockedAt: String? = null,
+)
 data class SyncData(
     val timestamp: String,
     val myData: SyncUserData,

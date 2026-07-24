@@ -19,7 +19,7 @@ import com.checkin.partner.data.entity.*
         AchievementEntity::class,
         UserConfigEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

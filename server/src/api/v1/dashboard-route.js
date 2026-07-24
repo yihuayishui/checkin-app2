@@ -43,10 +43,21 @@ router.get('/today', auth, (req, res) => {
   const myStreak = calcStreak(req.userId);
 
   // 构建今日任务打卡状态
-  const todayTaskStatus = myTasks.map(task => ({
-    task,
-    checkedIn: myCheckins.some(r => r.task_id === task.task_id),
-  }));
+  const todayTaskStatus = myTasks.map(task => {
+    const approvedCheckin = myCheckins.find(
+      r => r.task_id === task.task_id && r.status === 'APPROVED'
+    );
+    const pendingCheckin = myCheckins.find(
+      r => r.task_id === task.task_id && r.status === 'PENDING'
+    );
+    return {
+      task,
+      checkedIn: !!approvedCheckin,
+      pendingApproval: pendingCheckin ? {
+        recordId: pendingCheckin.record_id,
+      } : null,
+    };
+  });
 
   let partnerData = null;
   if (pair) {
@@ -82,10 +93,24 @@ router.get('/today', auth, (req, res) => {
       isVacation: partnerUser ? !!partnerUser.is_vacation : false,
       checkins: partnerCheckins,
       streak: partnerStreak,
-      todayTaskStatus: partnerTasks.map(task => ({
-        task,
-        checkedIn: partnerCheckins.some(r => r.task_id === task.task_id),
-      })),
+      todayTaskStatus: partnerTasks.map(task => {
+        // 已确认的打卡（APPROVED 才算已打卡）
+        const approvedCheckin = partnerCheckins.find(
+          r => r.task_id === task.task_id && r.status === 'APPROVED'
+        );
+        // 待确认的打卡（需我同意）
+        const pendingCheckin = partnerCheckins.find(
+          r => r.task_id === task.task_id && r.status === 'PENDING'
+        );
+
+        return {
+          task,
+          checkedIn: !!approvedCheckin,
+          pendingApproval: pendingCheckin ? {
+            recordId: pendingCheckin.record_id,
+          } : null,
+        };
+      }),
     };
   }
 

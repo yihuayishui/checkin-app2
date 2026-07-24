@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,9 +18,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.checkin.partner.network.dto.DashboardToday
 import com.checkin.partner.network.dto.TaskWithStatus
 import com.checkin.partner.ui.theme.MintGreen
@@ -37,6 +41,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     val error by viewModel.error.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isVacation by viewModel.isVacation.collectAsState()
+    val avatarUrl by viewModel.avatarUrl.collectAsState()
 
     // 请求通知权限（Android 13+）
     val notifPermLauncher = rememberLauncherForActivityResult(
@@ -74,14 +79,28 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("profile") }) {
+                        if (avatarUrl != null) {
+                            AsyncImage(
+                                model = avatarUrl,
+                                contentDescription = "我的",
+                                modifier = Modifier.size(32.dp).clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(Icons.Filled.AccountCircle, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                },
                 actions = {
+                    IconButton(onClick = { navController.navigate("profile/achievements") }) {
+                        Icon(Icons.Filled.EmojiEvents, null, tint = MaterialTheme.colorScheme.onPrimary)
+                    }
                     IconButton(onClick = { navController.navigate("profile/notifications") }) {
                         BadgedBox(badge = { if (unreadCount > 0) Badge { Text("$unreadCount") } }) {
                             Icon(Icons.Filled.Notifications, null, tint = MaterialTheme.colorScheme.onPrimary)
                         }
-                    }
-                    IconButton(onClick = { navController.navigate("profile") }) {
-                        Icon(Icons.Filled.AccountCircle, null, tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             )
@@ -178,7 +197,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
                         }
                     } else {
                         items(partnerTasks) { ts ->
-                            PartnerTaskCard(ts)
+                            PartnerTaskCard(ts, viewModel, currentUserId)
                         }
                     }
                 }
@@ -219,7 +238,12 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: () -> Un
                         style = MaterialTheme.typography.labelSmall)
                 }
             }
-            if (ts.checkedIn) {
+            if (ts.pendingApproval != null) {
+                Button(onClick = {}, enabled = false, colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary, disabledContainerColor = MaterialTheme.colorScheme.tertiary)) {
+                    Text("⏳ 等待确认", color = MaterialTheme.colorScheme.onTertiary)
+                }
+            } else if (ts.checkedIn) {
                 Button(onClick = {}, enabled = false, colors = ButtonDefaults.buttonColors(
                     containerColor = MintGreen, disabledContainerColor = MintGreen)) {
                     Icon(Icons.Filled.Check, null); Text("已打卡")
@@ -234,12 +258,36 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: () -> Un
 }
 
 @Composable
-fun PartnerTaskCard(ts: TaskWithStatus) {
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+fun PartnerTaskCard(ts: TaskWithStatus, viewModel: AppViewModel, currentUserId: String) {
+    val isMyCreation = ts.task.creatorId == currentUserId
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+        containerColor = if (ts.pendingApproval != null) MaterialTheme.colorScheme.tertiaryContainer
+        else MaterialTheme.colorScheme.secondaryContainer
+    )) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(ts.task.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            Text(if (ts.checkedIn) "✅" else "⏳", style = MaterialTheme.typography.titleMedium)
+            Column(Modifier.weight(1f)) {
+                Text(ts.task.name, style = MaterialTheme.typography.bodyMedium)
+                if (ts.pendingApproval != null && isMyCreation) {
+                    Text("⏳ 等待确认", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                } else if (ts.pendingApproval != null) {
+                    Text("⏳ 待搭档确认", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (ts.pendingApproval != null && isMyCreation) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = { viewModel.approveCheckin(ts.pendingApproval.recordId) },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) { Text("✓ 同意", fontWeight = FontWeight.Bold) }
+                    TextButton(
+                        onClick = { viewModel.rejectCheckin(ts.pendingApproval.recordId) },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) { Text("✗ 拒绝") }
+                }
+            } else {
+                Text(if (ts.checkedIn) "✅" else "⏳", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
