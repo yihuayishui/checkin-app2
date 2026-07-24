@@ -1,6 +1,7 @@
 package com.checkin.partner.network.jpush
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import cn.jpush.android.api.NotificationMessage
 import cn.jpush.android.service.JPushMessageReceiver
@@ -27,6 +28,24 @@ class JPushReceiver : JPushMessageReceiver() {
                     RetrofitClient.getApi().uploadJpushRegId(JpushRegIdRequest(regId))
                 } catch (_: Exception) { }
             }
+        }
+    }
+
+    override fun onNotifyMessageArrived(context: Context, message: NotificationMessage) {
+        // JPush 展示通知时，将 notifId 记入去重列表，避免 refreshNotifications 重复弹
+        val extras = message.notificationExtras
+        if (extras != null) {
+            try {
+                val notifId = JSONObject(extras).optLong("notifId", -1L)
+                if (notifId > 0) {
+                    val prefs = context.getSharedPreferences("checkin_prefs", Context.MODE_PRIVATE)
+                    val existing = prefs.getString("shown_notification_ids", null) ?: ""
+                    val ids = existing.split(",").mapNotNull { it.toLongOrNull() }.toMutableSet()
+                    if (ids.add(notifId)) {
+                        prefs.edit().putString("shown_notification_ids", ids.joinToString(",")).apply()
+                    }
+                }
+            } catch (_: Exception) {}
         }
     }
 

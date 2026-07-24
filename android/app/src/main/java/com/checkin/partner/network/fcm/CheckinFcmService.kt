@@ -2,6 +2,7 @@ package com.checkin.partner.network.fcm
 
 import android.Manifest
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -87,6 +88,16 @@ class CheckinFcmService : FirebaseMessagingService() {
         val notificationId = if (notifId > 0) notifId.toInt() else System.currentTimeMillis().toInt()
         val manager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
         manager.notify(notificationId, notification)
+
+        // 记录到 shownNotificationIds，避免 refreshNotifications 重复弹
+        if (notifId > 0) {
+            val prefs = getSharedPreferences("checkin_prefs", Context.MODE_PRIVATE)
+            val existing = prefs.getString("shown_notification_ids", null) ?: ""
+            val ids = existing.split(",").mapNotNull { it.toLongOrNull() }.toMutableSet()
+            if (ids.add(notifId)) {
+                prefs.edit().putString("shown_notification_ids", ids.joinToString(",")).apply()
+            }
+        }
     }
 
     private fun getNavRoute(type: String, relatedId: String?): String {

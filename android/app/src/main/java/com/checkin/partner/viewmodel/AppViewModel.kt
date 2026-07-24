@@ -791,7 +791,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 "vacation_start", "vacation_end" -> "pair"
                 "reward_exchange", "reward_confirmed", "reward_rejected",
                 "reward_delete_request", "reward_claim_request" -> "reward/list"
-                "task_delete_request", "task_edit_request" -> "task/list"
+                "task_delete_request", "task_edit_request", "task_assign" -> "task/list"
                 "password_reset_request", "password_reset_done" -> "profile"
                 else -> "profile/notifications"
             }
