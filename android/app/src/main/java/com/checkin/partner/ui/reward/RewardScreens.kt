@@ -137,7 +137,7 @@ fun RewardCard(reward: RewardEntity, poolPoints: Int, currentUserId: String,
                 else when {
                     reward.status == "ACTIVE" && canExchange -> {
                         ScaleButton(onClick = onExchange, modifier = Modifier.height(36.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = androidx.compose.ui.graphics.Color.White)) { Text("兑换") }
+                            colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = MaterialTheme.colorScheme.onTertiary)) { Text("兑换") }
                     }
                     reward.status == "PENDING" && reward.applicantId == currentUserId -> {
                         TextButton(onClick = onCancelExchange) { Text("撤回申请") }
@@ -149,7 +149,7 @@ fun RewardCard(reward: RewardEntity, poolPoints: Int, currentUserId: String,
                     // 待兑现：还没人申请
                 reward.status == "CONFIRMED" && reward.claimRequestedBy == null -> {
                     ScaleButton(onClick = onClaim, modifier = Modifier.height(36.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = androidx.compose.ui.graphics.Color.White)) { Text("申请兑现") }
+                        colors = ButtonDefaults.buttonColors(containerColor = MintGreen, contentColor = MaterialTheme.colorScheme.onTertiary)) { Text("申请兑现") }
                 }
                 // 待兑现：我在申请中
                 reward.status == "CONFIRMED" && reward.claimRequestedBy == currentUserId -> {

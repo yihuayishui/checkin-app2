@@ -1,5 +1,7 @@
 package com.checkin.partner.network.ws
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.checkin.partner.BuildConfig
 import com.google.gson.Gson
@@ -98,11 +100,13 @@ class WebSocketManager {
         ws?.send(text)
     }
 
+    private val handler = Handler(Looper.getMainLooper())
+
     private fun reconnect() {
         if (reconnectAttempts >= 10) return
         reconnectAttempts++
-        Thread.sleep(3000L * reconnectAttempts.coerceAtMost(5))
-        doConnect()
+        val delayMs = 3000L * reconnectAttempts.coerceAtMost(5)
+        handler.postDelayed({ doConnect() }, delayMs)
     }
 
     fun disconnect() {

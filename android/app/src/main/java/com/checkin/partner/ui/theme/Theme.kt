@@ -64,10 +64,10 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = DarkBg,
     primaryContainer = Color(0xFF3A1A2A),
     onPrimaryContainer = Color(0xFFF0C0D0),
-    secondary = TextGray,
+    secondary = Color(0xFFA0A0B0),
     onSecondary = DarkBg,
-    secondaryContainer = Color(0xFF3A3020),
-    onSecondaryContainer = CreamLight,
+    secondaryContainer = Color(0xFF3A3020).copy(alpha = 0.7f),
+    onSecondaryContainer = Color(0xFFFFE8C8),
     tertiary = MintGreen,
     onTertiary = DarkBg,
     tertiaryContainer = Color(0xFF1A3A2A),
@@ -76,7 +76,7 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = DarkTextPrimary,
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurface2,
+    surfaceVariant = DarkSurface2.copy(alpha = 0.75f),
     onSurfaceVariant = DarkTextGray,
     error = Color(0xFFE06060),
     onError = DarkBg,
@@ -157,16 +157,22 @@ private val AppShapes = Shapes(
 
 @Composable
 fun CheckinPartnerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: String = "system",
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (themeMode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = androidx.compose.ui.graphics.Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // 深色模式下状态栏图标应为浅色（白）才能看清
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }
     MaterialTheme(

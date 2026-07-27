@@ -14,11 +14,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.checkin.partner.viewmodel.AppViewModel
@@ -422,7 +424,15 @@ fun NotificationsScreen(navController: NavController, viewModel: AppViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AchievementsScreen(navController: NavController, viewModel: AppViewModel) {
+    val achievements by viewModel.achievements.collectAsState()
+
+    LaunchedEffect(Unit) { viewModel.refreshAchievements() }
+
+    val personal = achievements.filter { it.group == "personal" }
+    val partner = achievements.filter { it.group == "partner" }
+
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = { TopAppBar(
             title = { Text("成就徽章", fontWeight = FontWeight.Bold) },
             navigationIcon = {
@@ -434,27 +444,70 @@ fun AchievementsScreen(navController: NavController, viewModel: AppViewModel) {
             )
         )}
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            val achievements = listOf(
-                "🥇" to "初次打卡" to "完成第一次打卡",
-                "🔥" to "坚持一周" to "连续打卡 7 天",
-                "🔥🔥" to "半月达人" to "连续打卡 14 天",
-                "🔥🔥🔥" to "满月勇士" to "连续打卡 30 天",
-                "💑" to "心有灵犀" to "双方同天打卡累计 7 次",
-                "🎁" to "第一次兑换" to "成功兑换第一个奖励",
-                "🏆" to "百日打卡" to "累计打卡 100 天",
-            )
-            achievements.forEach { (iconName, desc) ->
-                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(iconName.first, style = MaterialTheme.typography.headlineMedium)
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(iconName.second, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (achievements.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        Text("暂无成就数据", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+            }
+
+            if (personal.isNotEmpty()) {
+                item {
+                    Text("🏃 个人打卡", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                items(personal) { AchievementCard(it) }
+            }
+
+            if (partner.isNotEmpty()) {
+                item { Spacer(Modifier.height(8.dp)) }
+                item {
+                    Text("💑 搭档同行", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                items(partner) { AchievementCard(it) }
+            }
+        }
+    }
+}
+
+@Composable
+fun AchievementCard(achievement: com.checkin.partner.network.api.AchievementData) {
+    val alpha = if (achievement.unlocked) 1f else 0.35f
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (achievement.unlocked)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            Modifier.padding(16.dp).alpha(alpha),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(achievement.icon, style = MaterialTheme.typography.headlineMedium, fontSize = 28.sp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(achievement.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    if (achievement.unlocked) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.Filled.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                Text(achievement.desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (achievement.unlocked && achievement.unlockedAt != null) {
+                    Text(
+                        "达成于 ${achievement.unlockedAt.take(10)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            if (!achievement.unlocked) {
+                Icon(Icons.Filled.Lock, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

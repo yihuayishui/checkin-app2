@@ -1,5 +1,6 @@
 package com.checkin.partner.ui.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -38,52 +39,101 @@ fun LoginScreen(navController: NavController, viewModel: AppViewModel) {
         contentWindowInsets = WindowInsets(0.dp),
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(32.dp),
+            modifier = Modifier.fillMaxSize().padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(Icons.Filled.Favorite, contentDescription = null,
-                modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp))
-            Text("打卡搭档", style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary)
+            // ── 顶部品牌区 ──
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    )
+                    .padding(top = 48.dp, bottom = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Filled.DirectionsRun, contentDescription = null,
+                        modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "打卡搭档",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "和搭档一起打卡",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(value = username, onValueChange = { username = it },
-                label = { Text("用户名") }, modifier = Modifier.fillMaxWidth(),
-                singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                leadingIcon = { Icon(Icons.Filled.Person, null) })
-
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(value = password, onValueChange = { password = it },
-                label = { Text("密码") }, modifier = Modifier.fillMaxWidth(),
-                singleLine = true, visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                leadingIcon = { Icon(Icons.Filled.Lock, null) },
-                trailingIcon = {
-                    IconButton(onClick = { showPassword = !showPassword }) {
-                        Icon(if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null)
-                    }
-                })
-
-            if (error != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = { viewModel.login(username.trim(), password) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                enabled = !isLoading && username.isNotBlank() && password.isNotBlank()
+            // ── 登录表单卡片 ──
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = MaterialTheme.shapes.large,
             ) {
-                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-                else Text("登  录", style = MaterialTheme.typography.titleMedium)
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    OutlinedTextField(
+                        value = username, onValueChange = { username = it },
+                        label = { Text("用户名") }, modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        leadingIcon = { Icon(Icons.Filled.Person, null) }
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = password, onValueChange = { password = it },
+                        label = { Text("密码") }, modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                        leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                        trailingIcon = {
+                            IconButton(onClick = { showPassword = !showPassword }) {
+                                Icon(if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null)
+                            }
+                        }
+                    )
+
+                    if (error != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { viewModel.login(username.trim(), password) },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = MaterialTheme.shapes.small,
+                        enabled = !isLoading && username.isNotBlank() && password.isNotBlank()
+                    ) {
+                        if (isLoading) CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        else Text("登  录", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             TextButton(onClick = { navController.navigate("register") }) {
                 Text("没有账号？立即注册")

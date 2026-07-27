@@ -53,7 +53,7 @@ pm2 logs my-backend-v2
 | 层级 | 技术 |
 |------|------|
 | Android 前端 | Kotlin + Jetpack Compose |
-| 本地数据库 | Room (SQLite), 版本号 5（fallbackToDestructiveMigration） |
+| 本地数据库 | Room (SQLite), 版本号 6（fallbackToDestructiveMigration） |
 | HTTP | Retrofit + OkHttp |
 | 实时通信 | OkHttp WebSocket（Socket.IO 协议简化版） |
 | 状态管理 | ViewModel + StateFlow / SharedFlow / mutableStateListOf |
