@@ -1,20 +1,26 @@
 package com.checkin.partner.ui.profile
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,6 +29,11 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
     val username by viewModel.currentUsername.collectAsState()
     val personalPoints by viewModel.personalPoints.collectAsState()
     val poolPoints by viewModel.poolPoints.collectAsState()
+    val avatarUrl by viewModel.avatarUrl.collectAsState()
+
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) viewModel.updateAvatarFromUri(uri)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -41,7 +52,21 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
             item {
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                     Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.AccountCircle, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                        Box(
+                            modifier = Modifier.size(64.dp).clip(CircleShape).clickable { imagePicker.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (avatarUrl != null) {
+                                AsyncImage(
+                                    model = avatarUrl,
+                                    contentDescription = "头像",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            } else {
+                                Icon(Icons.Filled.AccountCircle, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
                         Spacer(Modifier.width(16.dp))
                         Column {
                             Text(username.ifEmpty { "未知" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)

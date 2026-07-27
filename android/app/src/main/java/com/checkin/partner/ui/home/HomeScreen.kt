@@ -309,7 +309,17 @@ fun PartnerEntryCard(navController: NavController, viewModel: AppViewModel) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             when (pairStatus?.status) {
                 "BOUND" -> {
-                    Icon(Icons.Filled.Favorite, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+                    val avatarUrl = pairStatus?.pair?.partnerAvatarUrl
+                    if (avatarUrl != null) {
+                        AsyncImage(
+                            model = avatarUrl,
+                            contentDescription = "搭档头像",
+                            modifier = Modifier.size(36.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Icon(Icons.Filled.Favorite, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+                    }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("搭档: ${pairStatus?.pair?.partnerUsername ?: "未知"}", fontWeight = FontWeight.Bold)

@@ -3,15 +3,19 @@ package com.checkin.partner.ui.pair
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.checkin.partner.network.dto.PairStatus
 import com.checkin.partner.network.dto.SearchUser
 import com.checkin.partner.viewmodel.AppViewModel
@@ -51,7 +55,17 @@ fun PairScreen(navController: NavController, viewModel: AppViewModel) {
                     item {
                         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                             Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Filled.Favorite, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                                val avatarUrl = pairStatus?.pair?.partnerAvatarUrl
+                                if (avatarUrl != null) {
+                                    AsyncImage(
+                                        model = avatarUrl,
+                                        contentDescription = "搭档头像",
+                                        modifier = Modifier.size(64.dp).clip(CircleShape),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                } else {
+                                    Icon(Icons.Filled.Favorite, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                                }
                                 Spacer(Modifier.height(8.dp))
                                 Text("你和 ${pairStatus?.pair?.partnerUsername ?: "搭档"} 已绑定", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                                 Text("绑定于 ${pairStatus?.pair?.createdAt?.take(10) ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -142,6 +156,15 @@ fun PairScreen(navController: NavController, viewModel: AppViewModel) {
                         items(searchResults) { user ->
                             Card(Modifier.fillMaxWidth()) {
                                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    if (user.avatarUrl != null) {
+                                        AsyncImage(
+                                            model = user.avatarUrl,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(36.dp).clip(CircleShape),
+                                            contentScale = ContentScale.Crop,
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                    }
                                     Column(Modifier.weight(1f)) {
                                         Text(user.username, fontWeight = FontWeight.Bold)
                                         Text("ID: ${user.userId.take(8)}…", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
