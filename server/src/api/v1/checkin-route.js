@@ -151,18 +151,29 @@ router.post('/create', auth, (req, res) => {
     taskTable.markDone(taskId);
   }
 
-  // 成就检查
+  // 成就检查（收集新解锁的成就）
   const totalDays = checkinTable.countTotalDays(userId);
   const streak = calcStreak(userId);
-  achievementTable.checkTotalDaysAchievement(userId, totalDays);
-  achievementTable.checkStreakAchievements(userId, streak);
+  const newAchievements = [
+    ...achievementTable.checkTotalDaysAchievement(userId, totalDays),
+    ...achievementTable.checkStreakAchievements(userId, streak),
+  ];
 
   // 同天打卡成就检查
   if (pair) {
     const partnerId = pair.user_a === userId ? pair.user_b : pair.user_a;
     const sameDayCount = checkinTable.countSameDayWithPartner(userId, partnerId);
-    achievementTable.checkSameDayAchievements(userId, sameDayCount);
-    achievementTable.checkSameDayAchievements(partnerId, sameDayCount);
+    newAchievements.push(...achievementTable.checkSameDayAchievements(userId, sameDayCount));
+    achievementTable.checkSameDayAchievements(partnerId, sameDayCount); // 搭档的成就（不通知当前用户）
+  }
+
+  // 新解锁成就发通知
+  const defs = achievementTable.getDefinitions();
+  for (const code of newAchievements) {
+    const def = defs.find(d => d.code === code);
+    if (def) {
+      sendPush(userId, '🎉 新成就解锁！', `恭喜获得「${def.name}」成就`, null, 'achievement_unlock');
+    }
   }
 
   // WebSocket 广播
@@ -176,6 +187,10 @@ router.post('/create', auth, (req, res) => {
     points: updatedPoints,
     personalPointsEarned: personalPoints,
     poolPointsEarned: poolPoints,
+    newAchievements: newAchievements.map(code => {
+      const def = achievementTable.getDefinitions().find(d => d.code === code);
+      return def ? { code: def.code, name: def.name, icon: def.icon } : null;
+    }).filter(Boolean),
   }, '打卡成功'));
 });
 

@@ -97,6 +97,12 @@ data class CheckinCreateResult(
     val poolPointsEarned: Int?,
     val status: String? = null,
     val message: String? = null,
+    val newAchievements: List<NewAchievement>? = null,
+)
+data class NewAchievement(
+    val code: String,
+    val name: String,
+    val icon: String,
 )
 
 // ── 奖励 ──

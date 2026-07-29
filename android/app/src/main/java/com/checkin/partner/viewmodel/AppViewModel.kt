@@ -68,6 +68,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _achievements = MutableStateFlow<List<com.checkin.partner.network.api.AchievementData>>(emptyList())
     val achievements: StateFlow<List<com.checkin.partner.network.api.AchievementData>> = _achievements.asStateFlow()
 
+    // ── 成就解锁弹窗 ──
+    private val _achievementUnlocked = MutableStateFlow<NewAchievement?>(null)
+    val achievementUnlocked: StateFlow<NewAchievement?> = _achievementUnlocked.asStateFlow()
+
+    fun clearAchievementUnlocked() { _achievementUnlocked.value = null }
+
     // ── 通知 ──
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
@@ -393,8 +399,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 if (res.isSuccessful && res.body()?.code == 200) {
                     val result = res.body()!!.data
                     if (result?.status == "PENDING") {
-                        // 需创建者确认，显示提示
                         _error.value = result.message ?: "打卡已提交，等待搭档确认"
+                    }
+                    // 新解锁成就弹窗
+                    val firstNew = result?.newAchievements?.firstOrNull()
+                    if (firstNew != null) {
+                        _achievementUnlocked.value = firstNew
                     }
                     refreshDashboard()
                 } else {
@@ -793,6 +803,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 "reward_delete_request", "reward_claim_request" -> "reward/list"
                 "task_delete_request", "task_edit_request", "task_assign" -> "task/list"
                 "password_reset_request", "password_reset_done" -> "profile"
+                "achievement_unlock" -> "profile/achievements"
                 else -> "profile/notifications"
             }
 

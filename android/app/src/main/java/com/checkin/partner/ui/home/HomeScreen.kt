@@ -67,6 +67,26 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
         }
     }
 
+    // 成就解锁弹窗
+    val achievementUnlocked by viewModel.achievementUnlocked.collectAsState()
+    achievementUnlocked?.let { ach ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearAchievementUnlocked() },
+            icon = { Text(ach.icon, style = MaterialTheme.typography.headlineLarge) },
+            title = { Text("🎉 成就解锁！", fontWeight = FontWeight.Bold) },
+            text = { Text("恭喜获得「${ach.name}」成就") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.clearAchievementUnlocked()
+                    navController.navigate("profile/achievements")
+                }) { Text("查看成就") }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.clearAchievementUnlocked() }) { Text("好的") }
+            }
+        )
+    }
+
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isLoading,
         onRefresh = { viewModel.refreshAll() }

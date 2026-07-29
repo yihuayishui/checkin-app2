@@ -41,27 +41,32 @@ function unlock(userId, code) {
   } catch { return false; }
 }
 
-/** 检查并解锁连胜成就 */
+/** 检查并解锁连胜成就。返回新解锁的成就列表 */
 function checkStreakAchievements(userId, streak) {
-  if (streak >= 365) unlock(userId, 'streak_365');
-  if (streak >= 180) unlock(userId, 'streak_180');
-  if (streak >= 30) unlock(userId, 'streak_30');
-  if (streak >= 14) unlock(userId, 'streak_14');
-  if (streak >= 7) unlock(userId, 'streak_7');
+  const unlocked = [];
+  if (streak >= 365 && unlock(userId, 'streak_365')) unlocked.push('streak_365');
+  if (streak >= 180 && unlock(userId, 'streak_180')) unlocked.push('streak_180');
+  if (streak >= 30 && unlock(userId, 'streak_30')) unlocked.push('streak_30');
+  if (streak >= 14 && unlock(userId, 'streak_14')) unlocked.push('streak_14');
+  if (streak >= 7 && unlock(userId, 'streak_7')) unlocked.push('streak_7');
+  return unlocked;
 }
 
-/** 检查并解锁累计打卡成就 */
+/** 检查并解锁累计打卡成就。返回新解锁的成就列表 */
 function checkTotalDaysAchievement(userId, totalDays) {
-  if (totalDays >= 100) unlock(userId, 'total_100');
+  if (totalDays >= 100 && unlock(userId, 'total_100')) return ['total_100'];
+  return [];
 }
 
-/** 检查并解锁同天打卡成就 */
+/** 检查并解锁同天打卡成就。返回新解锁的成就列表 */
 function checkSameDayAchievements(userId, sameDayCount) {
-  if (sameDayCount >= 365) unlock(userId, 'same_day_365');
-  if (sameDayCount >= 180) unlock(userId, 'same_day_180');
-  if (sameDayCount >= 100) unlock(userId, 'same_day_100');
-  if (sameDayCount >= 30) unlock(userId, 'same_day_30');
-  if (sameDayCount >= 7) unlock(userId, 'same_day_7');
+  const unlocked = [];
+  if (sameDayCount >= 365 && unlock(userId, 'same_day_365')) unlocked.push('same_day_365');
+  if (sameDayCount >= 180 && unlock(userId, 'same_day_180')) unlocked.push('same_day_180');
+  if (sameDayCount >= 100 && unlock(userId, 'same_day_100')) unlocked.push('same_day_100');
+  if (sameDayCount >= 30 && unlock(userId, 'same_day_30')) unlocked.push('same_day_30');
+  if (sameDayCount >= 7 && unlock(userId, 'same_day_7')) unlocked.push('same_day_7');
+  return unlocked;
 }
 
 module.exports = { getDefinitions, findByUserId, unlock, checkStreakAchievements, checkTotalDaysAchievement, checkSameDayAchievements };

@@ -112,6 +112,7 @@ class CheckinFcmService : FirebaseMessagingService() {
             "reward_delete_request", "reward_claim_request" -> "reward/list"
             "task_delete_request", "task_edit_request", "task_assign" -> "task/list"
             "password_reset_request", "password_reset_done" -> "profile"
+            "achievement_unlock" -> "profile/achievements"
             else -> "profile/notifications"
         }
     }
