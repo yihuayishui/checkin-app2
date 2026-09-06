@@ -36,7 +36,7 @@ D:\project\checkin-app2\
 
 ### 后端（服务器）
 ```bash
-# 服务器 IP: 198.46.252.178（root / [REDACTED]）
+# 服务器 IP: 198.46.252.178（SSH 登录凭据不入库，见本地密码管理）
 # 后端路径: /var/www/checkin-server-v2/server/
 cd /var/www/checkin-server-v2/server
 npm start            # node src/index.js
