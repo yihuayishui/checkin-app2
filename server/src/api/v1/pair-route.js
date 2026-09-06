@@ -7,6 +7,7 @@ const auth = require('../../middleware/auth');
 const { ApiError } = require('../../middleware/error-handler');
 const { success } = require('../../utils/helper');
 const { sendPush } = require('../../utils/fcm');
+const socketHandler = require('../../ws/socket-handler');
 
 const router = Router();
 
@@ -35,7 +36,7 @@ router.get('/status', auth, (req, res) => {
       pairId: p.id, partnerId,
       partnerUsername: partner ? partner.username : '未知',
       partnerAvatarUrl: partner ? partner.avatar_url : null,
-      partnerOnline: partner ? !!userTable.getFcmToken(partnerId) : false,
+      partnerOnline: partner ? socketHandler.isOnline(partnerId) : false,
       requestedBy: p.requested_by, unbindRequestedBy: p.unbind_requested_by,
       createdAt: p.created_at,
     },

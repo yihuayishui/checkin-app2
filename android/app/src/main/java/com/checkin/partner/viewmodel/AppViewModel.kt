@@ -2,6 +2,10 @@ package com.checkin.partner.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,14 +17,20 @@ import com.checkin.partner.network.dto.*
 import com.checkin.partner.network.ws.WebSocketManager
 import cn.jpush.android.api.JPushInterface
 import com.google.android.gms.tasks.Tasks
+import com.google.gson.Gson
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
@@ -42,12 +52,28 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _avatarUrl = MutableStateFlow<String?>(null)
     val avatarUrl: StateFlow<String?> = _avatarUrl.asStateFlow()
 
+    private val _isVacation = MutableStateFlow(false)
+    val isVacation: StateFlow<Boolean> = _isVacation.asStateFlow()
+
     // ── 看板 ──
     private val _dashboard = MutableStateFlow<DashboardToday?>(null)
     val dashboard: StateFlow<DashboardToday?> = _dashboard.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // 首次加载状态：页面在网络返回前显示骨架屏，避免空白闪现。
+    private val _dashboardLoaded = MutableStateFlow(false)
+    val dashboardLoaded: StateFlow<Boolean> = _dashboardLoaded.asStateFlow()
+
+    private val _tasksLoaded = MutableStateFlow(false)
+    val tasksLoaded: StateFlow<Boolean> = _tasksLoaded.asStateFlow()
+
+    private val _rewardsLoaded = MutableStateFlow(false)
+    val rewardsLoaded: StateFlow<Boolean> = _rewardsLoaded.asStateFlow()
+
+    private val _profileLoaded = MutableStateFlow(false)
+    val profileLoaded: StateFlow<Boolean> = _profileLoaded.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -74,6 +100,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearAchievementUnlocked() { _achievementUnlocked.value = null }
 
+    // ── 打卡成功弹窗 ──
+    private val _checkinSuccess = MutableStateFlow<CheckinSuccess?>(null)
+    val checkinSuccess: StateFlow<CheckinSuccess?> = _checkinSuccess.asStateFlow()
+
+    fun clearCheckinSuccess() { _checkinSuccess.value = null }
+
     // ── 通知 ──
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
@@ -88,9 +120,19 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _transactions = MutableStateFlow<List<PointTransactionEntity>>(emptyList())
     val transactions: StateFlow<List<PointTransactionEntity>> = _transactions.asStateFlow()
 
+    // ── 离线待补打卡 ──
+    private val _pendingCheckinCount = MutableStateFlow(0)
+    val pendingCheckinCount: StateFlow<Int> = _pendingCheckinCount.asStateFlow()
+    private val _pendingCheckinTaskIds = MutableStateFlow<Set<String>>(emptySet())
+    val pendingCheckinTaskIds: StateFlow<Set<String>> = _pendingCheckinTaskIds.asStateFlow()
+
     // ── 搭档 ──
     private val _pairStatus = MutableStateFlow<PairStatus?>(null)
     val pairStatus: StateFlow<PairStatus?> = _pairStatus.asStateFlow()
+
+    // 搭档在线状态（WebSocket 实时更新，null=未知）
+    private val _partnerOnline = MutableStateFlow<Boolean?>(null)
+    val partnerOnline: StateFlow<Boolean?> = _partnerOnline.asStateFlow()
 
     private val _searchResults = MutableStateFlow<List<SearchUser>>(emptyList())
     val searchResults: StateFlow<List<SearchUser>> = _searchResults.asStateFlow()
@@ -100,7 +142,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // ── 持久化已通知到系统通知栏的 ID，避免重复弹窗 ──
     private val prefs = application.getSharedPreferences("checkin_prefs", Context.MODE_PRIVATE)
+    private val gson = Gson()
+    private var dashboardRefreshJob: Job? = null
+    private var notificationRefreshJob: Job? = null
+    private var notificationAlertPending = false
     private val shownNotificationIds: MutableSet<Long> = loadShownIds()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private fun loadShownIds(): MutableSet<Long> {
         val s = prefs.getString("shown_notification_ids", null)
@@ -126,6 +175,21 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val navigationEvent: SharedFlow<String> = _navigationEvent.asSharedFlow()
 
     init {
+        // token 失效（401）→ 清登录态、断开 WS，由导航层跳回登录页。
+        // 回调可能在 OkHttp 线程并发触发多次，用 _isLoggedIn 判断保证幂等。
+        RetrofitClient.onSessionExpired = {
+            if (_isLoggedIn.value) {
+                _isLoggedIn.value = false
+                _currentUserId.value = ""
+                _partnerOnline.value = null
+                _error.value = "登录已过期，请重新登录"
+                ws.disconnect()
+            }
+        }
+
+        // 网络恢复监听 → 自动补发离线打卡
+        registerNetworkMonitor()
+
         // 恢复登录状态
         val savedToken = RetrofitClient.token
         if (!savedToken.isNullOrEmpty()) {
@@ -136,6 +200,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             // 冷启动：连接 WebSocket + 拉取通知（弹系统通知栏）+ 上传 FCM/JPush Token + 加载头像
             val uid = _currentUserId.value
             if (uid.isNotBlank()) {
+                // 先恢复本地快照，再静默请求网络。这样从后台回来或进程被系统回收后，
+                // 首页不会先出现空白和 0 分，而是立即显示上次已知的数据。
+                restoreLocalState(uid)
                 ws.connect(uid)
                 setupWsListeners()
                 refreshNotifications()
@@ -143,7 +210,155 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 uploadJpushRegId()
                 loadAvatar()
                 refreshAchievements()
+                loadPendingCheckinState()
+                flushPendingCheckins()
             }
+        }
+    }
+
+    /**
+     * 恢复当前账号的本地快照。所有数据都按 userId 隔离，避免切换账号时串数据。
+     */
+    private fun restoreLocalState(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = db.userDao().getById(userId)
+            // 看板缓存只在当天有效：过期的缓存会让首页一直显示旧的打卡状态，
+            // 甚至让昨天打过卡的任务显示"已完成"、连打卡按钮都不出现
+            val todayBeijing = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("GMT+8")
+            }.format(Date())
+            val cachedDashboard = prefs.getString("dashboard_cache_$userId", null)?.let { json ->
+                runCatching { gson.fromJson(json, DashboardToday::class.java) }.getOrNull()
+            }?.takeIf { it.todayDate == todayBeijing }
+            val cachedPair = prefs.getString("pair_cache_$userId", null)?.let { json ->
+                runCatching { gson.fromJson(json, PairStatus::class.java) }.getOrNull()
+            }
+            val tasks = db.taskDao().getByUserId(userId)
+            val rewards = db.rewardDao().getAll()
+            val notifications = db.notificationDao().getByUserId(userId)
+            val unread = db.notificationDao().unreadCount(userId)
+
+            // 只把仍属于当前账号的快照写入 StateFlow。
+            if (_currentUserId.value != userId) return@launch
+            user?.let {
+                _currentUsername.value = it.username
+                _avatarUrl.value = it.avatarUrl
+                _personalPoints.value = it.personalPoints
+                _poolPoints.value = it.poolPoints
+                _isVacation.value = it.isVacation
+            }
+            cachedDashboard?.let { dashboard ->
+                _dashboard.value = dashboard
+                _personalPoints.value = dashboard.myData.personalPoints
+                _poolPoints.value = dashboard.myData.poolPoints
+            }
+            cachedPair?.let { status ->
+                _pairStatus.value = status
+                _partnerUsername.value = status.pair?.partnerUsername
+                _partnerOnline.value = status.pair?.partnerOnline
+            }
+            _tasks.value = tasks
+            _rewards.value = rewards
+            _notifications.value = notifications
+            _unreadCount.value = unread
+            _dashboardLoaded.value = cachedDashboard != null
+            _tasksLoaded.value = tasks.isNotEmpty()
+            _rewardsLoaded.value = rewards.isNotEmpty()
+            // 本地没有用户快照时也不要让“我的”页无限停留在骨架屏：
+            // 登录态已经恢复，至少可以先展示已保存的用户名，网络返回后再补齐积分和头像。
+            _profileLoaded.value = user != null || _currentUsername.value.isNotBlank()
+        }
+    }
+
+    private fun saveDashboardCache(userId: String, dashboard: DashboardToday) {
+        prefs.edit().putString("dashboard_cache_$userId", gson.toJson(dashboard)).apply()
+    }
+
+    private fun savePairCache(userId: String, status: PairStatus) {
+        prefs.edit().putString("pair_cache_$userId", gson.toJson(status)).apply()
+    }
+
+    /** 解析非 2xx 响应 errorBody 里的 {code, message}，拿到服务端真实错误信息（body() 此时为 null） */
+    private fun errorMessageOf(res: retrofit2.Response<*>): String? {
+        val raw = try { res.errorBody()?.string() } catch (_: Exception) { null } ?: return null
+        return runCatching { gson.fromJson(raw, ApiErrorBody::class.java).message }.getOrNull()
+    }
+
+    // ── 网络状态监听（网络恢复 → 补发离线打卡） ──
+
+    private fun registerNetworkMonitor() {
+        try {
+            val cm = getApplication<Application>()
+                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    flushPendingCheckins()
+                }
+            })
+        } catch (_: Exception) {}
+    }
+
+    // ── 离线待补打卡 ──
+
+    private companion object {
+        /** 离线补打卡对同一记录的最大重试次数（仅服务端 5xx 时累计），防止无限重试 */
+        const val MAX_PENDING_ATTEMPTS = 5
+    }
+
+    private fun loadPendingCheckinState() {
+        viewModelScope.launch {
+            val uid = _currentUserId.value
+            val list = if (uid.isBlank()) emptyList()
+                else db.pendingCheckinDao().getAll().filter { it.userId == uid }
+            _pendingCheckinCount.value = list.size
+            _pendingCheckinTaskIds.value = list.map { it.taskId }.toSet()
+        }
+    }
+
+    /** 补发离线打卡：成功删除 / 401 或业务错误(4xx)删除 / 5xx 计入重试次数，超过上限放弃 */
+    fun flushPendingCheckins() {
+        viewModelScope.launch {
+            val uid = _currentUserId.value
+            if (uid.isBlank()) return@launch
+            val pendingList = db.pendingCheckinDao().getAll().filter { it.userId == uid }
+            if (pendingList.isEmpty()) return@launch
+            for (p in pendingList) {
+                try {
+                    val res = api.createCheckin(CheckinCreateRequest(
+                        recordId = p.recordId,
+                        taskId = p.taskId, userId = p.userId,
+                        note = p.note, imageUrl = p.imageUrl,
+                    ))
+                    if (res.isSuccessful && res.body()?.code == 200) {
+                        db.pendingCheckinDao().deleteById(p.id)
+                        // 补发解锁成就也弹窗
+                        val firstNew = res.body()!!.data?.newAchievements?.firstOrNull()
+                        if (firstNew != null) _achievementUnlocked.value = firstNew
+                    } else if (res.code() == 401) {
+                        // token 已失效：保留只会无限重试，直接放弃（重新登录后如还在打卡窗口内可手动补）
+                        db.pendingCheckinDao().deleteById(p.id)
+                    } else if (res.code() in 400..499) {
+                        // 业务错误（已打过/时间窗不符）：删除避免死循环
+                        db.pendingCheckinDao().deleteById(p.id)
+                        _error.value = errorMessageOf(res) ?: "补打卡失败（${res.code()}）"
+                    } else {
+                        // 5xx：服务端问题，计入重试次数，超过上限放弃，避免无限重试
+                        if (p.attempts + 1 >= MAX_PENDING_ATTEMPTS) {
+                            db.pendingCheckinDao().deleteById(p.id)
+                        } else {
+                            db.pendingCheckinDao().incrementAttempts(p.id)
+                        }
+                    }
+                } catch (_: Exception) {
+                    // 网络仍不通：停止本轮补发，等下次网络恢复
+                    break
+                }
+            }
+            loadPendingCheckinState()
+            refreshDashboard()
         }
     }
 
@@ -166,6 +381,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     db.userDao().insert(UserEntity(
                         userId = data.userId, username = data.username, avatarUrl = data.avatarUrl
                     ))
+                    _profileLoaded.value = true
                     // WebSocket 连接
                     ws.connect(data.userId)
                     setupWsListeners()
@@ -173,8 +389,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     uploadCurrentFcmToken()
                     uploadJpushRegId()
                     refreshAchievements()
+                    loadPendingCheckinState()
+                    flushPendingCheckins()
                 } else {
-                    _error.value = res.body()?.message ?: "登录失败"
+                    _error.value = errorMessageOf(res) ?: "登录失败"
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "网络错误"
@@ -199,6 +417,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     db.userDao().insert(UserEntity(
                         userId = data.userId, username = data.username, avatarUrl = data.avatarUrl
                     ))
+                    _profileLoaded.value = true
                     ws.connect(data.userId)
                     setupWsListeners()
                     refreshDashboard()
@@ -206,7 +425,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     uploadJpushRegId()
                     refreshAchievements()
                 } else {
-                    _error.value = res.body()?.message ?: "注册失败"
+                    _error.value = errorMessageOf(res) ?: "注册失败"
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "网络错误"
@@ -221,52 +440,87 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         RetrofitClient.clearToken()
         _isLoggedIn.value = false
         _currentUserId.value = ""
+        _partnerOnline.value = null
+        _dashboardLoaded.value = false
+        _tasksLoaded.value = false
+        _rewardsLoaded.value = false
+        _profileLoaded.value = false
+        _dashboard.value = null
+        _pairStatus.value = null
         viewModelScope.launch {
+            // 看板/搭档缓存按 userId 隔离存在 SharedPreferences 里，注销时全部清掉，
+            // 避免下次登录（含换账号）先恢复到陈旧快照
+            prefs.all.keys.filter { it.startsWith("dashboard_cache_") || it.startsWith("pair_cache_") }
+                .forEach { prefs.edit().remove(it).apply() }
             db.userDao().clearAll()
             db.taskDao().clearAll()
             db.checkinDao().clearAll()
             db.rewardDao().clearAll()
+            db.pendingCheckinDao().clearAll()
         }
+        loadPendingCheckinState()
     }
 
     // ── 全量刷新（下拉刷新用） ──
 
     fun refreshAll() {
+        if (_isRefreshing.value) return
         viewModelScope.launch {
-            _isLoading.value = true
+            _isRefreshing.value = true
             val startTime = System.currentTimeMillis()
-            refreshDashboard()
-            refreshTasks()
-            refreshRewards()
-            refreshAchievements()
-            getPairStatus()
-            loadConfig()
-            loadVacationState()
-            refreshTransactions()
-            loadMakeupCards()
-            refreshNotifications()
-            // 至少显示 1.5 秒刷新指示器，让用户感知到刷新完成
-            val elapsed = System.currentTimeMillis() - startTime
-            if (elapsed < 1500) {
-                kotlinx.coroutines.delay(1500 - elapsed)
+            try {
+                refreshDashboard()
+                refreshTasks()
+                refreshRewards()
+                refreshAchievements()
+                getPairStatus()
+                loadConfig()
+                loadVacationState()
+                refreshTransactions()
+                loadMakeupCards()
+                refreshNotifications()
+                // 给用户一个稳定的刷新反馈，同时不再占用全局 isLoading 状态。
+                val elapsed = System.currentTimeMillis() - startTime
+                if (elapsed < 650) kotlinx.coroutines.delay(650 - elapsed)
+            } finally {
+                _isRefreshing.value = false
             }
-            _isLoading.value = false
         }
     }
 
     // ── 看板 ──
 
     fun refreshDashboard() {
-        viewModelScope.launch {
+        if (dashboardRefreshJob?.isActive == true) return
+        dashboardRefreshJob = viewModelScope.launch {
             try {
                 val res = api.getDashboard()
                 if (res.isSuccessful && res.body()?.data != null) {
-                    _dashboard.value = res.body()!!.data
-                    val d = res.body()!!.data!!
-                    _personalPoints.value = d.myData.personalPoints
-                    _poolPoints.value = d.myData.poolPoints
+                    val data = res.body()!!.data!!
+                    _dashboard.value = data
+                    _personalPoints.value = data.myData.personalPoints
+                    _poolPoints.value = data.myData.poolPoints
+                    saveDashboardCache(_currentUserId.value, data)
+                    // 同步更新用户快照，下一次启动可直接显示最新积分。
+                    // 头像请求可能和看板请求并发，未返回前要保留数据库里的旧头像。
+                    val existingUser = db.userDao().getById(_currentUserId.value)
+                    db.userDao().insert(
+                        UserEntity(
+                            userId = _currentUserId.value,
+                            username = _currentUsername.value.ifBlank { existingUser?.username ?: "" },
+                            avatarUrl = _avatarUrl.value ?: existingUser?.avatarUrl,
+                            personalPoints = data.myData.personalPoints,
+                            poolPoints = data.myData.poolPoints,
+                            isVacation = _isVacation.value,
+                        )
+                    )
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                // 网络失败时保留已有 dashboard，不回退成空状态。
+            } finally {
+                _dashboardLoaded.value = true
+                dashboardRefreshJob = null
+            }
         }
     }
 
@@ -277,8 +531,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 if (res.isSuccessful && res.body()?.data != null) {
                     val list = res.body()!!.data!!.tasks.map { it.toEntity() }
                     _tasks.value = list
-                    db.taskDao().clearAll()
-                    db.taskDao().insertAll(list)
+                    // 只有 "mine"/"created"（与 Room 缓存语义一致）才写缓存；
+                    // for_partner/from_partner/done 是子集数据，写入会把缓存写脏
+                    if (filter == null || filter == "mine" || filter == "created") {
+                        db.taskDao().clearAll()
+                        db.taskDao().insertAll(list)
+                    }
                 }
             } catch (_: Exception) {
                 // 离线或请求失败：只对 "mine" 和 "created" 使用缓存（其他过滤条件缓存不准确）
@@ -286,6 +544,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     _tasks.value = db.taskDao().getByUserId(_currentUserId.value)
                 }
                 // 其他过滤条件（for_partner/from_partner/done）失败时不覆盖列表，保持已有数据
+            } finally {
+                _tasksLoaded.value = true
             }
         }
     }
@@ -353,17 +613,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun deleteTask(taskId: String, creatorId: String? = null) {
+    fun deleteTask(taskId: String, creatorId: String? = null, filter: String? = null) {
         viewModelScope.launch {
             try {
                 if (creatorId != null && creatorId != _currentUserId.value) {
                     // 搭档创建的任务，需要对方确认
                     api.requestDeleteTask(taskId)
-                    refreshTasks()
+                    refreshTasks(filter)
                     _error.value = null
                 } else {
                     api.deleteTask(taskId)
-                    refreshTasks()
+                    refreshTasks(filter)
                 }
             } catch (e: Exception) { _error.value = e.message }
         }
@@ -378,9 +638,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun reactivateTask(taskId: String) {
+    fun reactivateTask(taskId: String, filter: String? = null) {
         viewModelScope.launch {
-            try { api.reactivateTask(taskId); refreshTasks() } catch (_: Exception) {}
+            try { api.reactivateTask(taskId); refreshTasks(filter) } catch (_: Exception) {}
         }
     }
 
@@ -390,9 +650,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+            val recordId = UUID.randomUUID().toString()
             try {
                 val res = api.createCheckin(CheckinCreateRequest(
-                    recordId = UUID.randomUUID().toString(),
+                    recordId = recordId,
                     taskId = taskId, userId = _currentUserId.value,
                     note = note, imageUrl = imageUrl,
                 ))
@@ -405,11 +666,35 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     val firstNew = result?.newAchievements?.firstOrNull()
                     if (firstNew != null) {
                         _achievementUnlocked.value = firstNew
+                    } else if (result?.status != "PENDING") {
+                        // 打卡成功弹窗（无新成就、非待确认时）
+                        val taskName = _dashboard.value?.myData?.todayTaskStatus
+                            ?.firstOrNull { it.task.taskId == taskId }?.task?.name
+                            ?: _tasks.value.firstOrNull { it.taskId == taskId }?.name
+                            ?: ""
+                        _checkinSuccess.value = CheckinSuccess(
+                            taskName = taskName,
+                            personalPoints = result?.personalPointsEarned ?: 0,
+                            poolPoints = result?.poolPointsEarned ?: 0,
+                            streak = _dashboard.value?.myData?.streak ?: 0,
+                        )
                     }
                     refreshDashboard()
                 } else {
-                    _error.value = res.body()?.message ?: "打卡失败"
+                    // 非 2xx 时 body() 为 null，真实原因（401 登录过期 / 409 已打卡 / 400 时间窗）在 errorBody 里
+                    _error.value = if (res.code() == 401) "登录已过期，请重新登录"
+                        else errorMessageOf(res) ?: "打卡失败"
                 }
+            } catch (e: IOException) {
+                // 网络异常：存入本地队列，网络恢复后自动补打，打卡不丢失
+                db.pendingCheckinDao().insert(PendingCheckinEntity(
+                    recordId = recordId,
+                    taskId = taskId, userId = _currentUserId.value,
+                    note = note, imageUrl = imageUrl,
+                    createdAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date()),
+                ))
+                loadPendingCheckinState()
+                _error.value = "网络异常，打卡已保存，联网后自动补打"
             } catch (e: Exception) {
                 _error.value = e.message ?: "网络错误"
             } finally {
@@ -461,6 +746,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             }
         } catch (e: Exception) {
             android.util.Log.e("VM", "fetchRewards error", e)
+        } finally {
+            _rewardsLoaded.value = true
         }
     }
 
@@ -558,6 +845,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     val status = res.body()!!.data!!
                     _pairStatus.value = status
                     _partnerUsername.value = status.pair?.partnerUsername
+                    _partnerOnline.value = status.pair?.partnerOnline
+                    savePairCache(_currentUserId.value, status)
                 }
             } catch (_: Exception) {}
         }
@@ -641,6 +930,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             refreshTasks()
             refreshNotifications()
         }
+        // 搭档上下线实时事件：{ userId, online, timestamp }
+        ws.on("partner:online") { payload ->
+            try {
+                val obj = org.json.JSONObject(payload)
+                _partnerOnline.value = obj.optBoolean("online")
+            } catch (_: Exception) {}
+        }
     }
 
     fun clearError() { _error.value = null }
@@ -702,7 +998,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val res = api.getProfile()
                 if (res.isSuccessful && res.body()?.data != null) {
-                    _avatarUrl.value = res.body()!!.data!!.avatarUrl
+                    val newAvatarUrl = res.body()!!.data!!.avatarUrl
+                    _avatarUrl.value = newAvatarUrl
+                    db.userDao().getById(_currentUserId.value)?.let { user ->
+                        db.userDao().insert(user.copy(avatarUrl = newAvatarUrl))
+                    }
                 }
             } catch (_: Exception) { }
         }
@@ -739,6 +1039,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val avatarRes = api.updateAvatar(mapOf("avatarUrl" to fullUrl))
                 if (avatarRes.isSuccessful && avatarRes.body()?.code == 200) {
                     _avatarUrl.value = fullUrl
+                    db.userDao().getById(_currentUserId.value)?.let { user ->
+                        db.userDao().insert(user.copy(avatarUrl = fullUrl))
+                    }
                 } else {
                     _error.value = avatarRes.body()?.message ?: "头像更新失败"
                 }
@@ -753,7 +1056,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // ── 通知 ──
 
     fun refreshNotifications(showAlert: Boolean = false) {
-        viewModelScope.launch {
+        if (showAlert) notificationAlertPending = true
+        if (notificationRefreshJob?.isActive == true) return
+        notificationRefreshJob = viewModelScope.launch {
+            val shouldShowAlert = notificationAlertPending
+            notificationAlertPending = false
             try {
                 val res = api.getNotifications()
                 if (res.isSuccessful && res.body()?.data != null) {
@@ -765,7 +1072,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                             isRead = it.isRead != 0, createdAt = it.createdAt,
                         )
                     }
-                    if (showAlert) {
+                    if (shouldShowAlert) {
                         val oldIds = _notifications.value.map { it.id }.toSet()
                         newList.filter { notif ->
                             !notif.isRead &&
@@ -775,14 +1082,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                             showLocalNotification(notif.id, notif.title, notif.body ?: "", notif.type, notif.relatedId)
                             shownNotificationIds.add(notif.id)
                         }
-                        // 持久化已通知 ID 列表
                         saveShownIds()
                     }
                     _notifications.value = newList
                     _unreadCount.value = data.unreadCount
+                    db.notificationDao().clearAll()
+                    db.notificationDao().insertAll(newList)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("VM", "refreshNotifications error", e)
+            } finally {
+                notificationRefreshJob = null
             }
         }
     }
@@ -905,9 +1215,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ── 请假 ──
-    private val _isVacation = MutableStateFlow(false)
-    val isVacation: StateFlow<Boolean> = _isVacation.asStateFlow()
-
     fun loadVacationState() {
         viewModelScope.launch {
             try {
@@ -1006,7 +1313,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     refreshDashboard()
                     onResult(true, "补签成功")
                 } else {
-                    onResult(false, res.body()?.message ?: "补签失败")
+                    onResult(false, if (res.code() == 401) "登录已过期，请重新登录"
+                        else errorMessageOf(res) ?: "补签失败")
                 }
             } catch (e: Exception) {
                 onResult(false, e.message ?: "网络错误")
@@ -1014,3 +1322,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
+/** 打卡成功弹窗数据 */
+data class CheckinSuccess(
+    val taskName: String,
+    val personalPoints: Int,
+    val poolPoints: Int,
+    val streak: Int,
+)

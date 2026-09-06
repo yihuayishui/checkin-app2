@@ -32,9 +32,9 @@ private val LightColorScheme = lightColorScheme(
     primaryContainer = PinkContainer,
     onPrimaryContainer = PinkOnContainer,
     // 辅助色（用容器色模拟奶油浅黄）
-    secondary = TextGray,
+    secondary = Lavender,
     onSecondary = PageBg,
-    secondaryContainer = CreamLight.copy(alpha = 0.7f),  // 规范：搭档卡片 70% 透明
+    secondaryContainer = LavenderContainer,  // 规范：搭档卡片 70% 透明
     onSecondaryContainer = TextDark,
     // 第三色（薄荷绿）
     tertiary = MintGreen,
@@ -60,28 +60,28 @@ private val LightColorScheme = lightColorScheme(
 
 // ── 深色主题配色 ──
 private val DarkColorScheme = darkColorScheme(
-    primary = PinkPrimary,
-    onPrimary = DarkBg,
-    primaryContainer = Color(0xFF3A1A2A),
-    onPrimaryContainer = Color(0xFFF0C0D0),
-    secondary = Color(0xFFA0A0B0),
-    onSecondary = DarkBg,
-    secondaryContainer = Color(0xFF3A3020).copy(alpha = 0.7f),
-    onSecondaryContainer = Color(0xFFFFE8C8),
-    tertiary = MintGreen,
-    onTertiary = DarkBg,
-    tertiaryContainer = Color(0xFF1A3A2A),
-    onTertiaryContainer = Color(0xFFB0E0C0),
+    primary = DarkPrimary,
+    onPrimary = Color(0xFF35131F),
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = DarkSecondary,
+    onSecondary = Color(0xFF1D1830),
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+    tertiary = DarkTertiary,
+    onTertiary = Color(0xFF102419),
+    tertiaryContainer = DarkTertiaryContainer,
+    onTertiaryContainer = DarkOnTertiaryContainer,
     background = DarkBg,
     onBackground = DarkTextPrimary,
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurface2.copy(alpha = 0.75f),
+    surfaceVariant = DarkSurface2,
     onSurfaceVariant = DarkTextGray,
-    error = Color(0xFFE06060),
-    onError = DarkBg,
-    errorContainer = Color(0xFF4A2020),
-    onErrorContainer = Color(0xFFE06060),
+    error = DarkError,
+    onError = Color(0xFF321111),
+    errorContainer = DarkErrorContainer,
+    onErrorContainer = DarkError,
     outline = DarkDivider,
     outlineVariant = DarkDivider,
 )
@@ -148,10 +148,10 @@ private val AppTypography = Typography(
 // ── 自定义圆角（对应 UI 规范） ──
 // 大模块卡片 12dp, 任务条目/按钮 10dp, 状态标签 6dp
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),   // 状态标签/小标识
-    small = RoundedCornerShape(10.dp),       // 任务条目/按钮/商品卡片
-    medium = RoundedCornerShape(12.dp),      // 大模块卡片
-    large = RoundedCornerShape(16.dp),       // 弹窗等
+    extraSmall = RoundedCornerShape(8.dp),   // 状态标签/小标识
+    small = RoundedCornerShape(12.dp),       // 任务条目/按钮/商品卡片
+    medium = RoundedCornerShape(16.dp),      // 大模块卡片
+    large = RoundedCornerShape(20.dp),       // 弹窗等
     extraLarge = RoundedCornerShape(28.dp),  // 底部Sheet等
 )
 
@@ -172,7 +172,8 @@ fun CheckinPartnerTheme(
             val window = (view.context as Activity).window
             window.statusBarColor = androidx.compose.ui.graphics.Color.Transparent.toArgb()
             // 深色模式下状态栏图标应为浅色（白）才能看清
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }
     MaterialTheme(

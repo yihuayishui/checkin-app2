@@ -2,12 +2,14 @@ package com.checkin.partner.ui.profile
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,12 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.checkin.partner.ui.components.ProfileSkeleton
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +38,7 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
     val personalPoints by viewModel.personalPoints.collectAsState()
     val poolPoints by viewModel.poolPoints.collectAsState()
     val avatarUrl by viewModel.avatarUrl.collectAsState()
+    val profileLoaded by viewModel.profileLoaded.collectAsState()
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) viewModel.updateAvatarFromUri(uri)
@@ -41,7 +48,12 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
-                title = { Text("我的", fontWeight = FontWeight.Bold) },
+                title = {
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text("我的", fontWeight = FontWeight.Bold)
+                        Text("管理你的打卡与奖励", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -49,63 +61,152 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
             )
         }
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // 用户头卡片
+        if (!profileLoaded) {
+            ProfileSkeleton(Modifier.fillMaxSize().padding(padding))
+        } else {
+            LazyColumn(
+            Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
             item {
-                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                    Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(64.dp).clip(CircleShape).clickable { imagePicker.launch("image/*") },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (avatarUrl != null) {
-                                AsyncImage(
-                                    model = avatarUrl,
-                                    contentDescription = "头像",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            } else {
-                                Icon(Icons.Filled.AccountCircle, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        Column {
-                            Text(username.ifEmpty { "未知" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text("⭐ 个人积分: $personalPoints · 🎁 奖励池: $poolPoints", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
+                ProfileHeaderCard(
+                    username = username,
+                    personalPoints = personalPoints,
+                    poolPoints = poolPoints,
+                    avatarUrl = avatarUrl,
+                    onAvatarClick = { imagePicker.launch("image/*") },
+                )
+            }
+
+            item {
+                Text("快捷入口", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ProfileMenuItem(Icons.Filled.Star, "成就徽章", "记录每一次坚持的里程碑") { navController.navigate("profile/achievements") }
+                    ProfileMenuItem(Icons.Filled.ReceiptLong, "积分流水", "查看积分收入与兑换记录") { navController.navigate("profile/points") }
+                    ProfileMenuItem(Icons.Filled.NotificationsActive, "通知中心", "及时查看搭档的新动态") { navController.navigate("profile/notifications") }
+                    ProfileMenuItem(Icons.Filled.AutoFixHigh, "补签卡", "把错过的打卡补回来") { navController.navigate("checkin/makeup") }
+                    ProfileMenuItem(Icons.Filled.Tune, "设置", "提醒、积分比例与通知偏好") { navController.navigate("profile/settings") }
                 }
             }
 
-            item { Spacer(Modifier.height(8.dp)) }
-
-            // 功能菜单
             item {
-                ProfileMenuItem(Icons.Filled.EmojiEvents, "成就徽章") { navController.navigate("profile/achievements") }
-                ProfileMenuItem(Icons.Filled.History, "积分流水") { navController.navigate("profile/points") }
-                ProfileMenuItem(Icons.Filled.Notifications, "通知中心") { navController.navigate("profile/notifications") }
-                ProfileMenuItem(Icons.Filled.AutoAwesome, "补签卡") { navController.navigate("checkin/makeup") }
-                ProfileMenuItem(Icons.Filled.Settings, "设置") { navController.navigate("profile/settings") }
-                Box(Modifier.fillMaxWidth().height(1.dp).padding(vertical = 8.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant))
-                ProfileMenuItem(Icons.Filled.Logout, "退出登录") { viewModel.logout(); navController.navigate("login") { popUpTo(0) { inclusive = true } } }
+                Card(
+                    Modifier.fillMaxWidth().clickable {
+                        viewModel.logout()
+                        navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                    },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.Logout, null, tint = MaterialTheme.colorScheme.error)
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text("退出登录", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                }
             }
         }
     }
 }
 
 @Composable
-fun ProfileMenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+private fun ProfileHeaderCard(
+    username: String,
+    personalPoints: Int,
+    poolPoints: Int,
+    avatarUrl: String?,
+    onAvatarClick: () -> Unit,
+) {
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
-        Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.width(16.dp))
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.weight(1f))
-        Icon(Icons.Filled.ChevronRight, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary))).padding(18.dp)
+        ) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.size(66.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.92f)).clickable { onAvatarClick() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (avatarUrl != null) {
+                            AsyncImage(model = avatarUrl, contentDescription = "头像", modifier = Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop)
+                        } else {
+                            Icon(Icons.Filled.AccountCircle, null, Modifier.size(60.dp), tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("你好，", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.82f))
+                        Text(username.ifEmpty { "未知" }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("点击头像更换照片", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.82f))
+                    }
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White.copy(alpha = 0.8f))
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    ProfileStat("个人积分", personalPoints.toString(), Modifier.weight(1f), Color.White)
+                    Box(Modifier.width(1.dp).height(34.dp).background(Color.White.copy(alpha = 0.35f)))
+                    ProfileStat("奖励池", poolPoints.toString(), Modifier.weight(1f), Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileStat(label: String, value: String, modifier: Modifier = Modifier, contentColor: Color = MaterialTheme.colorScheme.onSurface) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = contentColor.copy(alpha = 0.82f))
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = contentColor)
+    }
+}
+
+@Composable
+fun ProfileMenuItem(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+    Card(
+        Modifier.fillMaxWidth().clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.Filled.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+        }
     }
 }
 

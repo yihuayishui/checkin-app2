@@ -112,3 +112,19 @@ interface ConfigDao {
     @Query("DELETE FROM user_config")
     suspend fun clear()
 }
+
+@Dao
+interface PendingCheckinDao {
+    @Insert
+    suspend fun insert(pending: PendingCheckinEntity)
+    @Query("SELECT * FROM pending_checkin ORDER BY created_at ASC")
+    suspend fun getAll(): List<PendingCheckinEntity>
+    @Query("DELETE FROM pending_checkin WHERE id = :id")
+    suspend fun deleteById(id: Long)
+    @Query("UPDATE pending_checkin SET attempts = attempts + 1 WHERE id = :id")
+    suspend fun incrementAttempts(id: Long)
+    @Query("DELETE FROM pending_checkin WHERE user_id = :userId")
+    suspend fun clearByUserId(userId: String)
+    @Query("DELETE FROM pending_checkin")
+    suspend fun clearAll()
+}

@@ -1,13 +1,26 @@
 package com.checkin.partner.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -35,6 +48,38 @@ import com.checkin.partner.viewmodel.AppViewModel
 val bottomNavRoutes = listOf("home", "task/list", "reward/list", "profile")
 
 @Composable
+private fun BottomNavItem(
+    selected: Boolean,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .size(width = 62.dp, height = 56.dp)
+            .clickable(onClick = onClick),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(23.dp),
+            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+        )
+        Spacer(Modifier.height(7.dp))
+        Box(
+            Modifier
+                .size(if (selected) 6.dp else 4.dp)
+                .background(
+                    if (selected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                    CircleShape,
+                )
+        )
+    }
+}
+
+@Composable
 fun CheckinNavGraph(viewModel: AppViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     val navController = rememberNavController()
     val startDest = if (viewModel.isLoggedIn.value) "home" else "login"
@@ -55,68 +100,66 @@ fun CheckinNavGraph(viewModel: AppViewModel = androidx.lifecycle.viewmodel.compo
         }
     }
 
+    // 登录态失效（token 过期 401 / 手动退出）→ 清空回退栈回到登录页
+    LaunchedEffect(Unit) {
+        viewModel.isLoggedIn.collect { loggedIn ->
+            if (!loggedIn && navController.currentDestination?.route != "login") {
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     val showBottomBar = currentRoute in bottomNavRoutes
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.background,
+                Surface(
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(start = 32.dp, end = 32.dp, top = 10.dp)
+                        .shadow(12.dp, RoundedCornerShape(36.dp)),
+                    shape = RoundedCornerShape(36.dp),
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp,
                 ) {
-                    NavigationBarItem(
-                        selected = currentRoute == "home",
-                        onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
-                        icon = { Icon(Icons.Filled.Home, "首页") },
-                        label = { Text("首页") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.outlineVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.outlineVariant,
-                            indicatorColor = androidx.compose.ui.graphics.Color(0xFFE7F3D8).copy(alpha = 0.7f),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(68.dp)
+                            .padding(horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        BottomNavItem(
+                            selected = currentRoute == "home",
+                            icon = Icons.Filled.Home,
+                            contentDescription = "首页",
+                            onClick = { navController.navigate("home") { popUpTo("home") { inclusive = true }; launchSingleTop = true } },
                         )
-                    )
-                    NavigationBarItem(
-                        selected = currentRoute == "task/list",
-                        onClick = { navController.navigate("task/list") { popUpTo("home"); launchSingleTop = true } },
-                        icon = { Icon(Icons.Filled.Checklist, "任务") },
-                        label = { Text("任务") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.outlineVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.outlineVariant,
-                            indicatorColor = androidx.compose.ui.graphics.Color(0xFFE7F3D8).copy(alpha = 0.7f),
+                        BottomNavItem(
+                            selected = currentRoute == "task/list",
+                            icon = Icons.Filled.Checklist,
+                            contentDescription = "任务",
+                            onClick = { navController.navigate("task/list") { popUpTo("home"); launchSingleTop = true } },
                         )
-                    )
-                    NavigationBarItem(
-                        selected = currentRoute == "reward/list",
-                        onClick = { navController.navigate("reward/list") { popUpTo("home"); launchSingleTop = true } },
-                        icon = { Icon(Icons.Filled.CardGiftcard, "奖励") },
-                        label = { Text("奖励") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.outlineVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.outlineVariant,
-                            indicatorColor = Color(0xFFE7F3D8).copy(alpha = 0.7f),
+                        BottomNavItem(
+                            selected = currentRoute == "reward/list",
+                            icon = Icons.Filled.CardGiftcard,
+                            contentDescription = "奖励",
+                            onClick = { navController.navigate("reward/list") { popUpTo("home"); launchSingleTop = true } },
                         )
-                    )
-                    NavigationBarItem(
-                        selected = currentRoute == "profile",
-                        onClick = { navController.navigate("profile") { popUpTo("home"); launchSingleTop = true } },
-                        icon = { Icon(Icons.Filled.Person, "我的") },
-                        label = { Text("我的") },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.outlineVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.outlineVariant,
-                            indicatorColor = Color(0xFFE7F3D8).copy(alpha = 0.7f),
+                        BottomNavItem(
+                            selected = currentRoute == "profile",
+                            icon = Icons.Filled.Person,
+                            contentDescription = "我的",
+                            onClick = { navController.navigate("profile") { popUpTo("home"); launchSingleTop = true } },
                         )
-                    )
+                    }
                 }
             }
         }

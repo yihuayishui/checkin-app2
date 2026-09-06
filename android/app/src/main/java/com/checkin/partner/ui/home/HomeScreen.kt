@@ -2,12 +2,14 @@ package com.checkin.partner.ui.home
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,32 +21,52 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
-import com.checkin.partner.network.dto.DashboardToday
+import coil.request.ImageRequest
 import com.checkin.partner.network.dto.TaskWithStatus
-import com.checkin.partner.ui.theme.MintGreen
 import com.checkin.partner.ui.components.ScaleButton
+import com.checkin.partner.ui.components.HomeSkeleton
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
-    val dashboard by viewModel.dashboard.collectAsState()
-    val personalPoints by viewModel.personalPoints.collectAsState()
-    val poolPoints by viewModel.poolPoints.collectAsState()
-    val unreadCount by viewModel.unreadCount.collectAsState()
-    val currentUsername by viewModel.currentUsername.collectAsState()
-    val currentUserId by viewModel.currentUserId.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isVacation by viewModel.isVacation.collectAsState()
-    val avatarUrl by viewModel.avatarUrl.collectAsState()
+    val dashboard by viewModel.dashboard.collectAsStateWithLifecycle()
+    val dashboardLoaded by viewModel.dashboardLoaded.collectAsStateWithLifecycle()
+    val personalPoints by viewModel.personalPoints.collectAsStateWithLifecycle()
+    val poolPoints by viewModel.poolPoints.collectAsStateWithLifecycle()
+    val unreadCount by viewModel.unreadCount.collectAsStateWithLifecycle()
+    val currentUsername by viewModel.currentUsername.collectAsStateWithLifecycle()
+    val currentUserId by viewModel.currentUserId.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val isVacation by viewModel.isVacation.collectAsStateWithLifecycle()
+    val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
+    val achievementUnlocked by viewModel.achievementUnlocked.collectAsStateWithLifecycle()
 
-    // 请求通知权限（Android 13+）
+    // 只在 dashboard 变化时重新计算列表，滚动过程中不重复创建空列表和分组对象。
+    val myData = dashboard?.myData
+    val partnerData = dashboard?.partnerData
+    val todayTasks = remember(myData) { myData?.todayTaskStatus.orEmpty() }
+    val partnerTasks = remember(partnerData) { partnerData?.todayTaskStatus.orEmpty() }
+
+    // 回调提升为稳定引用，避免 items lambda 每次重组重建导致 item 无法跳过重组
+    val checkinAction = remember { { taskId: String -> viewModel.doCheckin(taskId) } }
+    val detailAction = remember { { taskId: String -> navController.navigate("checkin/detail/$taskId") } }
+    val approveAction = remember { { recordId: String -> viewModel.approveCheckin(recordId) } }
+    val rejectAction = remember { { recordId: String -> viewModel.rejectCheckin(recordId) } }
+    val openProfileAction = remember { { navController.navigate("profile") } }
+    val openAchievementsAction = remember { { navController.navigate("profile/achievements") } }
+    val openNotificationsAction = remember { { navController.navigate("profile/notifications") } }
+    val openPairAction = remember { { navController.navigate("pair") } }
+
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {}
@@ -52,28 +74,25 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             notifPermLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
-    }
-
-    LaunchedEffect(Unit) {
         viewModel.refreshDashboard()
         viewModel.refreshNotifications(showAlert = true)
     }
 
-    // 错误提示
-    LaunchedEffect(error) {
-        error?.let { msg ->
-            android.widget.Toast.makeText(navController.context, msg, android.widget.Toast.LENGTH_SHORT).show()
-            viewModel.clearError()
+    // 错误提示：用 collect 订阅，error 变化不驱动首页重组
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { msg ->
+            if (msg != null) {
+                android.widget.Toast.makeText(navController.context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                viewModel.clearError()
+            }
         }
     }
 
-    // 成就解锁弹窗
-    val achievementUnlocked by viewModel.achievementUnlocked.collectAsState()
     achievementUnlocked?.let { ach ->
         AlertDialog(
             onDismissRequest = { viewModel.clearAchievementUnlocked() },
             icon = { Text(ach.icon, style = MaterialTheme.typography.headlineLarge) },
-            title = { Text("🎉 成就解锁！", fontWeight = FontWeight.Bold) },
+            title = { Text("成就解锁", fontWeight = FontWeight.Bold) },
             text = { Text("恭喜获得「${ach.name}」成就") },
             confirmButton = {
                 Button(onClick = {
@@ -88,144 +107,96 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     }
 
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = isLoading,
+        refreshing = isRefreshing,
         onRefresh = { viewModel.refreshAll() }
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            TopAppBar(
-                title = { Text("打卡搭档${if (isVacation) " 🏖️" else ""}", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigate("profile") }) {
-                        if (avatarUrl != null) {
-                            AsyncImage(
-                                model = avatarUrl,
-                                contentDescription = "我的",
-                                modifier = Modifier.size(32.dp).clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(Icons.Filled.AccountCircle, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onPrimary)
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate("profile/achievements") }) {
-                        Icon(Icons.Filled.EmojiEvents, null, tint = MaterialTheme.colorScheme.onPrimary)
-                    }
-                    IconButton(onClick = { navController.navigate("profile/notifications") }) {
-                        BadgedBox(badge = { if (unreadCount > 0) Badge { Text("$unreadCount") } }) {
-                            Icon(Icons.Filled.Notifications, null, tint = MaterialTheme.colorScheme.onPrimary)
-                        }
-                    }
-                }
-            )
-        },
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                // MainActivity 开启 edge-to-edge，首页没有 TopAppBar 自动消费状态栏 inset，
+                // 需要显式留出状态栏高度，避免头像和用户名压到系统时间区域。
+                .windowInsetsPadding(WindowInsets.statusBars)
                 .pullRefresh(pullRefreshState)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // 积分卡片
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                    ) {
-                        Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("⭐ 个人积分", style = MaterialTheme.typography.labelMedium)
-                                Text("$personalPoints", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🎁 奖励池", style = MaterialTheme.typography.labelMedium)
-                                Text("$poolPoints", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-                            }
-                        }
-                    }
+            if (!dashboardLoaded && dashboard == null) {
+                HomeSkeleton(Modifier.fillMaxSize())
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                item(key = "header", contentType = "header") {
+                    HomeHeader(
+                        username = currentUsername,
+                        avatarUrl = avatarUrl,
+                        unreadCount = unreadCount,
+                        isVacation = isVacation,
+                        onProfile = openProfileAction,
+                        onAchievements = openAchievementsAction,
+                        onNotifications = openNotificationsAction,
+                    )
                 }
 
-                // 搭档入口
-                item {
-                    PartnerEntryCard(navController, viewModel)
+                item(key = "points", contentType = "hero") {
+                    PointsHeroCard(
+                        personalPoints = personalPoints,
+                        poolPoints = poolPoints,
+                        myStreak = myData?.streak ?: 0,
+                        partnerStreak = partnerData?.streak,
+                    )
                 }
 
-                // 连续打卡
-                item {
-                    Card(Modifier.fillMaxWidth()) {
-                        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceAround) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🔥 我的连续", style = MaterialTheme.typography.labelSmall)
-                                Text("${dashboard?.myData?.streak ?: 0}天", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-                            }
-                            if (dashboard?.partnerData != null) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("🔥 搭档连续", style = MaterialTheme.typography.labelSmall)
-                                    Text("${dashboard?.partnerData?.streak ?: 0}天", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-                                }
-                            }
-                        }
-                    }
+                item(key = "partner", contentType = "hero") { PartnerEntryCard(openPairAction, viewModel) }
+
+                item(key = "today_header", contentType = "section") {
+                    SectionHeader(
+                        title = "今日任务",
+                        subtitle = "完成一点点，今天就很棒",
+                        icon = Icons.Filled.CheckCircle,
+                    )
                 }
 
-                // 今日任务（一键打卡）
-                item {
-                    Text("📋 今日任务", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-
-                val todayTasks = dashboard?.myData?.todayTaskStatus ?: emptyList()
                 if (todayTasks.isEmpty()) {
-                    item {
-                        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                            Text("今天没有待打卡的任务~", modifier = Modifier.padding(24.dp),
-                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+                    item(key = "today_empty", contentType = "empty") { EmptyStateCard("今天没有待打卡的任务", "去任务页安排一个小目标吧") }
                 } else {
-                    items(todayTasks) { ts ->
-                        TodayTaskCard(ts, currentUserId,
-                            onCheckin = { viewModel.doCheckin(ts.task.taskId) },
-                            onDetail = { navController.navigate("checkin/detail/${ts.task.taskId}") })
+                    items(todayTasks, key = { it.task.taskId }, contentType = { "task" }) { ts ->
+                        TodayTaskCard(
+                            ts = ts,
+                            currentUserId = currentUserId,
+                            onCheckin = checkinAction,
+                            onDetail = detailAction,
+                        )
                     }
                 }
 
-                // 搭档今日进度
-                item { Spacer(Modifier.height(8.dp)) }
-
-                if (dashboard?.partnerData != null) {
-                    item {
-                        Text("💑 ${dashboard?.partnerData?.username ?: "搭档"} 今日进度${if (dashboard?.partnerData?.isVacation == true) " 🏖️请假中" else ""}",
-                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (partnerData != null) {
+                    item(key = "partner_header", contentType = "section") {
+                        SectionHeader(
+                            title = "${partnerData.username} 的进度",
+                            subtitle = if (partnerData.isVacation) "今天请假中，好好休息" else "互相看见，也互相鼓励",
+                            icon = Icons.Filled.Favorite,
+                        )
                     }
-                    val partnerTasks = dashboard?.partnerData?.todayTaskStatus ?: emptyList()
                     if (partnerTasks.isEmpty()) {
-                        item {
-                            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                                Text("搭档今天没有任务~", modifier = Modifier.padding(16.dp),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
+                        item(key = "partner_empty", contentType = "empty") { EmptyStateCard("搭档今天没有任务", "一起安排一个轻松的小目标吧") }
                     } else {
-                        items(partnerTasks) { ts ->
-                            PartnerTaskCard(ts, viewModel, currentUserId)
+                        items(partnerTasks, key = { it.task.taskId }, contentType = { "task" }) { ts ->
+                            PartnerTaskCard(ts, currentUserId, approveAction, rejectAction)
                         }
+                    }
                     }
                 }
             }
+
             PullRefreshIndicator(
-                refreshing = isLoading,
+                refreshing = isRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
                 contentColor = MaterialTheme.colorScheme.primary,
@@ -234,8 +205,169 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: () -> Unit, onDetail: () -> Unit) {
+private fun HomeHeader(
+    username: String,
+    avatarUrl: String?,
+    unreadCount: Int,
+    isVacation: Boolean,
+    onProfile: () -> Unit,
+    onAchievements: () -> Unit,
+    onNotifications: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            modifier = Modifier.clickable(onClick = onProfile),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (avatarUrl != null) {
+                AsyncImage(
+                    // 限制解码尺寸，避免大图加载卡顿
+                    model = ImageRequest.Builder(LocalContext.current).data(avatarUrl).size(96).build(),
+                    contentDescription = "我的头像",
+                    modifier = Modifier.size(46.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text("早上好${if (isVacation) "，今天休息" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = if (username.isBlank()) "打卡搭档" else username,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            IconButton(onClick = onAchievements) {
+                Icon(Icons.Filled.EmojiEvents, contentDescription = "成就", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            IconButton(onClick = onNotifications) {
+                BadgedBox(badge = { if (unreadCount > 0) Badge { Text(if (unreadCount > 99) "99+" else "$unreadCount") } }) {
+                    Icon(Icons.Filled.NotificationsNone, contentDescription = "通知", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PointsHeroCard(personalPoints: Int, poolPoints: Int, myStreak: Int, partnerStreak: Int?) {
+    val primaryText = Color.White
+    val secondaryText = Color.White.copy(alpha = 0.78f)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)))
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("今天也一起加油", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = primaryText)
+                    Text("每一次完成，都是给彼此的小回应", style = MaterialTheme.typography.bodySmall, color = secondaryText)
+                }
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = primaryText.copy(alpha = 0.9f), modifier = Modifier.size(20.dp))
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                HeroMetric("我的积分", "$personalPoints", Modifier.weight(1f), primaryText, secondaryText)
+                HeroMetric("奖励池", "$poolPoints", Modifier.weight(1f), primaryText, secondaryText)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                StreakChip("我的连续", myStreak, Modifier.weight(1f), primaryText, secondaryText)
+                if (partnerStreak != null) StreakChip("搭档连续", partnerStreak, Modifier.weight(1f), primaryText, secondaryText)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroMetric(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color,
+    labelColor: Color,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = labelColor)
+        Text(value, style = MaterialTheme.typography.headlineMedium, color = valueColor, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun StreakChip(
+    label: String,
+    days: Int,
+    modifier: Modifier = Modifier,
+    valueColor: Color,
+    labelColor: Color,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = valueColor, modifier = Modifier.size(17.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = labelColor)
+            Text("${days}天", style = MaterialTheme.typography.labelLarge, color = valueColor, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, subtitle: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(9.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateCard(title: String, subtitle: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 17.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: (String) -> Unit, onDetail: (String) -> Unit) {
     val freqLabel = when (ts.task.frequency) {
         "DAILY" -> "每日"
         "WEEKLY" -> "每周"
@@ -248,118 +380,132 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: () -> Un
         ts.task.creatorId != currentUserId && ts.task.userId == currentUserId -> "搭档给我的"
         else -> ""
     }
-    Card(Modifier.fillMaxWidth().clickable { onDetail() }) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(Modifier.weight(1f)) {
-                Text(ts.task.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text("+${ts.task.pointPerCheck}分 · $freqLabel · $creatorLabel",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val accent = if (ts.checkedIn) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = { onDetail(ts.task.taskId) }),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.width(4.dp).height(48.dp).clip(RoundedCornerShape(2.dp)).background(accent))
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(ts.task.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text("+${ts.task.pointPerCheck}分 · $freqLabel · $creatorLabel", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (ts.task.startTime != null || ts.task.endTime != null) {
-                    Text("⏰ ${ts.task.startTime ?: "不限"}~${ts.task.endTime ?: "不限"}",
-                        style = MaterialTheme.typography.labelSmall)
+                    Text("${ts.task.startTime ?: "不限"} — ${ts.task.endTime ?: "不限"}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            if (ts.pendingApproval != null) {
-                Button(onClick = {}, enabled = false, colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary, disabledContainerColor = MaterialTheme.colorScheme.tertiary)) {
-                    Text("⏳ 等待确认", color = MaterialTheme.colorScheme.onTertiary)
-                }
-            } else if (ts.checkedIn) {
-                Button(onClick = {}, enabled = false, colors = ButtonDefaults.buttonColors(
-                    containerColor = MintGreen, disabledContainerColor = MintGreen)) {
-                    Icon(Icons.Filled.Check, null); Text("已打卡")
-                }
-            } else {
-                ScaleButton(onClick = onCheckin) {
-                    Text("打卡")
-                }
+            Spacer(Modifier.width(8.dp))
+            when {
+                ts.pendingApproval != null -> StatusPill("待确认", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+                ts.checkedIn -> StatusPill("已完成", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+                else -> ScaleButton(onClick = { onCheckin(ts.task.taskId) }) { Text("打卡") }
             }
         }
     }
 }
 
 @Composable
-fun PartnerTaskCard(ts: TaskWithStatus, viewModel: AppViewModel, currentUserId: String) {
+private fun StatusPill(text: String, background: Color, contentColor: Color) {
+    Surface(color = background, contentColor = contentColor, shape = RoundedCornerShape(10.dp)) {
+        Text(text, modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun PartnerTaskCard(ts: TaskWithStatus, currentUserId: String, onApprove: (String) -> Unit, onReject: (String) -> Unit) {
     val isMyCreation = ts.task.creatorId == currentUserId
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-        containerColor = if (ts.pendingApproval != null) MaterialTheme.colorScheme.tertiaryContainer
-        else MaterialTheme.colorScheme.secondaryContainer
-    )) {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(Modifier.weight(1f)) {
-                Text(ts.task.name, style = MaterialTheme.typography.bodyMedium)
-                if (ts.pendingApproval != null && isMyCreation) {
-                    Text("⏳ 等待确认", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                } else if (ts.pendingApproval != null) {
-                    Text("⏳ 待搭档确认", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+    val accent = if (ts.checkedIn) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.width(4.dp).height(44.dp).clip(RoundedCornerShape(2.dp)).background(accent))
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(ts.task.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    when {
+                        ts.pendingApproval != null && isMyCreation -> "等待你的确认"
+                        ts.pendingApproval != null -> "等待搭档确认"
+                        ts.checkedIn -> "搭档已经完成啦"
+                        else -> "还在努力中"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (ts.pendingApproval != null && isMyCreation) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(
-                        onClick = { viewModel.approveCheckin(ts.pendingApproval.recordId) },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                    ) { Text("✓ 同意", fontWeight = FontWeight.Bold) }
-                    TextButton(
-                        onClick = { viewModel.rejectCheckin(ts.pendingApproval.recordId) },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) { Text("✗ 拒绝") }
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    TextButton(onClick = { onApprove(ts.pendingApproval.recordId) }) { Text("同意", fontWeight = FontWeight.Bold) }
+                    TextButton(onClick = { onReject(ts.pendingApproval.recordId) }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("拒绝") }
                 }
             } else {
-                Text(if (ts.checkedIn) "✅" else "⏳", style = MaterialTheme.typography.titleMedium)
+                StatusPill(if (ts.checkedIn) "完成" else "进行中", if (ts.checkedIn) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant, if (ts.checkedIn) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
 @Composable
-fun PartnerEntryCard(navController: NavController, viewModel: AppViewModel) {
-    val pairStatus by viewModel.pairStatus.collectAsState()
+fun PartnerEntryCard(onClick: () -> Unit, viewModel: AppViewModel) {
+    val pairStatus by viewModel.pairStatus.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.getPairStatus() }
 
     Card(
-        Modifier.fillMaxWidth().clickable { navController.navigate("pair") },
-        colors = CardDefaults.cardColors(
-            containerColor = if (pairStatus?.status == "BOUND") MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant
-        )
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            when (pairStatus?.status) {
-                "BOUND" -> {
-                    val avatarUrl = pairStatus?.pair?.partnerAvatarUrl
-                    if (avatarUrl != null) {
-                        AsyncImage(
-                            model = avatarUrl,
-                            contentDescription = "搭档头像",
-                            modifier = Modifier.size(36.dp).clip(CircleShape),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Icon(Icons.Filled.Favorite, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+            Box(
+                modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                when (pairStatus?.status) {
+                    "BOUND" -> {
+                        val partnerAvatarUrl = pairStatus?.pair?.partnerAvatarUrl
+                        if (partnerAvatarUrl != null) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current).data(partnerAvatarUrl).size(96).build(),
+                                contentDescription = "搭档头像",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else Icon(Icons.Filled.Favorite, null, tint = MaterialTheme.colorScheme.primary)
                     }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("搭档: ${pairStatus?.pair?.partnerUsername ?: "未知"}", fontWeight = FontWeight.Bold)
-                        Text("点击查看搭档详情", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Icon(Icons.Filled.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                "PENDING" -> {
-                    Icon(Icons.Filled.HourglassEmpty, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.secondary)
-                    Spacer(Modifier.width(12.dp))
-                    Text("搭档请求处理中…", Modifier.weight(1f), fontWeight = FontWeight.Bold)
-                    Icon(Icons.Filled.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                else -> {
-                    Icon(Icons.Filled.PersonAdd, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.width(12.dp))
-                    Text("添加搭档", Modifier.weight(1f), fontWeight = FontWeight.Bold)
-                    Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary)
+                    "PENDING" -> Icon(Icons.Filled.HourglassEmpty, null, tint = MaterialTheme.colorScheme.secondary)
+                    else -> Icon(Icons.Filled.PersonAdd, null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    when (pairStatus?.status) {
+                        "BOUND" -> "搭档：${pairStatus?.pair?.partnerUsername ?: "未知"}"
+                        "PENDING" -> "搭档请求处理中"
+                        else -> "添加你的搭档"
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    when (pairStatus?.status) {
+                        "BOUND" -> "点击查看搭档详情"
+                        "PENDING" -> "确认后就可以开始互相打卡啦"
+                        else -> "邀请一个人，一起坚持更容易"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

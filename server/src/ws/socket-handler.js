@@ -144,6 +144,11 @@ function initSocketHandler(socketIO) {
 
 function getIO() { return io; }
 
+// 查询用户是否在线（WebSocket 连接已认证）
+function isOnline(userId) {
+  return socketMap.has(userId);
+}
+
 function broadcastPointsUpdate(ioInstance, userId, points) {
   if (!ioInstance) return;
   const payload = {
@@ -163,4 +168,4 @@ function broadcastPointsUpdate(ioInstance, userId, points) {
   }
 }
 
-module.exports = { initSocketHandler, getIO, broadcastPointsUpdate };
+module.exports = { initSocketHandler, getIO, broadcastPointsUpdate, isOnline };

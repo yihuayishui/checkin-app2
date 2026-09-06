@@ -12,7 +12,14 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     private var baseUrl: String = BuildConfig.BASE_URL
+
+    // 拦截器在 OkHttp 线程读写，主线程在登录/登出时写，需要 volatile 保证可见性
+    @Volatile
     var token: String? = null
+
+    // token 失效（401）回调，由上层清登录态并跳转登录页。
+    // 登录/注册接口的 401 是"用户名或密码错误"，不算会话过期。
+    var onSessionExpired: (() -> Unit)? = null
 
     private lateinit var api: ApiService
     private lateinit var prefs: android.content.SharedPreferences
@@ -33,8 +40,22 @@ object RetrofitClient {
             chain.proceed(request.build())
         }
 
+        val sessionInterceptor = Interceptor { chain ->
+            val response = chain.proceed(chain.request())
+            if (response.code == 401) {
+                val path = response.request.url.encodedPath
+                val isAuthRequest = path.endsWith("/login") || path.endsWith("/register")
+                if (!isAuthRequest && token != null) {
+                    clearToken()
+                    onSessionExpired?.invoke()
+                }
+            }
+            response
+        }
+
         val client = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(sessionInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

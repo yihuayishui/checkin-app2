@@ -9,6 +9,12 @@ data class ApiResponse<T>(
     val data: T?,
 )
 
+// 服务端非 2xx 响应的错误体（Retrofit 放在 errorBody 里，body() 为 null）
+data class ApiErrorBody(
+    val code: Int = 0,
+    val message: String? = null,
+)
+
 // ── 用户 ──
 data class RegisterRequest(val username: String, val password: String)
 data class LoginRequest(val username: String, val password: String)

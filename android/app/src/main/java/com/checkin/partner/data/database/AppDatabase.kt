@@ -18,8 +18,9 @@ import com.checkin.partner.data.entity.*
         NotificationEntity::class,
         AchievementEntity::class,
         UserConfigEntity::class,
+        PendingCheckinEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
     abstract fun achievementDao(): AchievementDao
     abstract fun configDao(): ConfigDao
+    abstract fun pendingCheckinDao(): PendingCheckinDao
 
     companion object {
         @Volatile

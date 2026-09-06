@@ -128,3 +128,16 @@ data class UserConfigEntity(
     @ColumnInfo(name = "streak_penalty_on") val streakPenaltyOn: Boolean = false,
     @ColumnInfo(name = "theme_mode") val themeMode: String = "system",
 )
+
+/** 离线待补打卡（网络恢复后自动补发） */
+@Entity(tableName = "pending_checkin")
+data class PendingCheckinEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "record_id") val recordId: String,
+    @ColumnInfo(name = "task_id") val taskId: String,
+    @ColumnInfo(name = "user_id") val userId: String,
+    val note: String?,
+    @ColumnInfo(name = "image_url") val imageUrl: String?,
+    @ColumnInfo(name = "created_at") val createdAt: String,
+    @ColumnInfo(name = "attempts") val attempts: Int = 0,
+)
