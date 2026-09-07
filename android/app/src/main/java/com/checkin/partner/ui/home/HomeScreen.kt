@@ -50,6 +50,8 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     val isVacation by viewModel.isVacation.collectAsStateWithLifecycle()
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
     val achievementUnlocked by viewModel.achievementUnlocked.collectAsStateWithLifecycle()
+    val optimisticCheckin by viewModel.optimisticCheckin.collectAsStateWithLifecycle()
+    val checkingTaskIds by viewModel.checkingTaskIds.collectAsStateWithLifecycle()
 
     // 只在 dashboard 变化时重新计算列表，滚动过程中不重复创建空列表和分组对象。
     val myData = dashboard?.myData
@@ -172,6 +174,8 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
                             currentUserId = currentUserId,
                             onCheckin = checkinAction,
                             onDetail = detailAction,
+                            isChecking = ts.task.taskId in checkingTaskIds,
+                            forceDone = ts.task.taskId in optimisticCheckin,
                         )
                     }
                 }
@@ -367,7 +371,14 @@ private fun EmptyStateCard(title: String, subtitle: String) {
 }
 
 @Composable
-fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: (String) -> Unit, onDetail: (String) -> Unit) {
+fun TodayTaskCard(
+    ts: TaskWithStatus,
+    currentUserId: String,
+    onCheckin: (String) -> Unit,
+    onDetail: (String) -> Unit,
+    isChecking: Boolean = false,
+    forceDone: Boolean = false,
+) {
     val freqLabel = when (ts.task.frequency) {
         "DAILY" -> "每日"
         "WEEKLY" -> "每周"
@@ -380,7 +391,9 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: (String)
         ts.task.creatorId != currentUserId && ts.task.userId == currentUserId -> "搭档给我的"
         else -> ""
     }
-    val accent = if (ts.checkedIn) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+    // 打卡点击后立即本地判定为已完成（乐观更新），不等网络返回；网络失败后随 dashboard 回退
+    val done = ts.checkedIn || forceDone
+    val accent = if (done) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = { onDetail(ts.task.taskId) }),
         shape = RoundedCornerShape(14.dp),
@@ -400,8 +413,21 @@ fun TodayTaskCard(ts: TaskWithStatus, currentUserId: String, onCheckin: (String)
             Spacer(Modifier.width(8.dp))
             when {
                 ts.pendingApproval != null -> StatusPill("待确认", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
-                ts.checkedIn -> StatusPill("已完成", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
-                else -> ScaleButton(onClick = { onCheckin(ts.task.taskId) }) { Text("打卡") }
+                done -> StatusPill("已完成", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+                else -> ScaleButton(
+                    onClick = { onCheckin(ts.task.taskId) },
+                    enabled = !isChecking,
+                ) {
+                    if (isChecking) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Text("打卡")
+                    }
+                }
             }
         }
     }

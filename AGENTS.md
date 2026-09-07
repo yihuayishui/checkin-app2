@@ -36,7 +36,7 @@ D:\project\checkin-app2\
 
 ### 后端（服务器）
 ```bash
-# 服务器 IP: 198.46.252.178（SSH 登录凭据不入库，见本地密码管理）
+# 服务器信息（IP / SSH 凭据）见 handoff.md，不入库
 # 后端路径: /var/www/checkin-server-v2/server/
 cd /var/www/checkin-server-v2/server
 npm start            # node src/index.js
@@ -53,7 +53,7 @@ pm2 logs my-backend-v2
 | 层级 | 技术 |
 |------|------|
 | Android 前端 | Kotlin + Jetpack Compose |
-| 本地数据库 | Room (SQLite), 版本号 6（fallbackToDestructiveMigration） |
+| 本地数据库 | Room (SQLite), 版本号 7（fallbackToDestructiveMigration） |
 | HTTP | Retrofit + OkHttp |
 | 实时通信 | OkHttp WebSocket（Socket.IO 协议简化版） |
 | 状态管理 | ViewModel + StateFlow / SharedFlow / mutableStateListOf |
@@ -153,7 +153,7 @@ Android Room ←→ Retrofit/WS → Node.js Express → better-sqlite3
 ## 已知坑点 / 踩坑记录
 
 ### 后端时区
-服务器（198.46.252.178）时间为 UTC，所有时间函数（`now()`、`today()`、`isInTimeWindow()`）已改为北京时间 UTC+8 计算。见 `helper.js`。
+服务器时间为 UTC，所有时间函数（`now()`、`today()`、`isInTimeWindow()`）已改为北京时间 UTC+8 计算。见 `helper.js`。
 
 ### 任务通知的接收方判断
 `PUT /update` 和 `POST /edit-request/:taskId` 需要通知"编辑者以外的那一方"：
