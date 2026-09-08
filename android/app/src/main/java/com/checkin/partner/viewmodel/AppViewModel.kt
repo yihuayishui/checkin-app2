@@ -151,6 +151,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val gson = Gson()
     private var dashboardRefreshJob: Job? = null
     private var notificationRefreshJob: Job? = null
+    private var pairStatusJob: Job? = null
     private var notificationAlertPending = false
     private val shownNotificationIds: MutableSet<Long> = loadShownIds()
 
@@ -453,6 +454,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _profileLoaded.value = false
         _dashboard.value = null
         _pairStatus.value = null
+        // 打卡相关态一并复位，避免飞行中的请求回来后把旧数据弹给下个账号（M5）
+        _checkingTaskIds.value = emptySet()
+        _pendingCheckinTaskIds.value = emptySet()
+        _pendingCheckinCount.value = 0
+        _checkinSuccess.value = null
+        _achievementUnlocked.value = null
+        _error.value = null
         viewModelScope.launch {
             // 看板/搭档缓存按 userId 隔离存在 SharedPreferences 里，注销时全部清掉，
             // 避免下次登录（含换账号）先恢复到陈旧快照
@@ -666,7 +674,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         if (_checkingTaskIds.value.contains(taskId)) return // 已在提交中，防重复点击
         _checkingTaskIds.value = _checkingTaskIds.value + taskId
         viewModelScope.launch {
-            _isLoading.value = true
+            // 不用全局 _isLoading：打卡有自己的 checkingTaskIds 驱动按钮动画；
+            // 置全局开关会污染创建任务/搭档页的加载态（M2）
             _error.value = null
             val recordId = UUID.randomUUID().toString()
             try {
@@ -724,10 +733,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 _error.value = "网络异常，打卡已保存，联网后自动补打"
                 _checkingTaskIds.value = _checkingTaskIds.value - taskId
             } catch (e: Exception) {
+                // 协程取消必须重抛，不能当普通错误吞掉（M4）
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _error.value = e.message ?: "网络错误"
                 _checkingTaskIds.value = _checkingTaskIds.value - taskId
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -866,8 +875,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // ── 搭档 ──
 
+    // 并发调用直接返回，避免快速滑动/多入口同时触发时乱序更新导致界面抖动
     fun getPairStatus() {
-        viewModelScope.launch {
+        if (pairStatusJob?.isActive == true) return
+        pairStatusJob = viewModelScope.launch {
             try {
                 val res = api.getPairStatus()
                 if (res.isSuccessful && res.body()?.data != null) {
@@ -878,6 +889,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     savePairCache(_currentUserId.value, status)
                 }
             } catch (_: Exception) {}
+            finally { pairStatusJob = null }
         }
     }
 

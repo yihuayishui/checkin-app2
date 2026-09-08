@@ -64,15 +64,16 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     val todayTasks = remember(myData) { myData?.todayTaskStatus.orEmpty() }
     val partnerTasks = remember(partnerData) { partnerData?.todayTaskStatus.orEmpty() }
 
-    // 回调提升为稳定引用，避免 items lambda 每次重组重建导致 item 无法跳过重组
-    val checkinAction = remember { { taskId: String -> viewModel.doCheckin(taskId) } }
-    val detailAction = remember { { taskId: String -> navController.navigate("checkin/detail/$taskId") } }
-    val approveAction = remember { { recordId: String -> viewModel.approveCheckin(recordId) } }
-    val rejectAction = remember { { recordId: String -> viewModel.rejectCheckin(recordId) } }
-    val openProfileAction = remember { { navController.navigate("profile") } }
-    val openAchievementsAction = remember { { navController.navigate("profile/achievements") } }
-    val openNotificationsAction = remember { { navController.navigate("profile/notifications") } }
-    val openPairAction = remember { { navController.navigate("pair") } }
+    // 回调提升为稳定引用，避免 items lambda 每次重组重建导致 item 无法跳过重组；
+    // remember 带上 key，避免闭包捕获过期参数（M3）。doCheckin 有默认参数，不能直接用方法引用。
+    val checkinAction = remember(viewModel) { { taskId: String -> viewModel.doCheckin(taskId) } }
+    val detailAction = remember(navController) { { taskId: String -> navController.navigate("checkin/detail/$taskId") } }
+    val approveAction = remember(viewModel) { { recordId: String -> viewModel.approveCheckin(recordId) } }
+    val rejectAction = remember(viewModel) { { recordId: String -> viewModel.rejectCheckin(recordId) } }
+    val openProfileAction = remember(navController) { { navController.navigate("profile") } }
+    val openAchievementsAction = remember(navController) { { navController.navigate("profile/achievements") } }
+    val openNotificationsAction = remember(navController) { { navController.navigate("profile/notifications") } }
+    val openPairAction = remember(navController) { { navController.navigate("pair") } }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -518,7 +519,9 @@ fun PartnerTaskCard(ts: TaskWithStatus, currentUserId: String, onApprove: (Strin
 @Composable
 fun PartnerEntryCard(onClick: () -> Unit, viewModel: AppViewModel) {
     val pairStatus by viewModel.pairStatus.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { viewModel.getPairStatus() }
+    // 注意：不要在这里调 getPairStatus()。Lazy item 滑出滑入会重建，
+    // 每次重建都发一次网络请求+触发重组，是首页滑动一顿一顿的主因。
+    // 搭档状态由登录/首页进入/搭档页操作时统一刷新，卡片只做纯展示。
 
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
