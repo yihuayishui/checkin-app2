@@ -38,6 +38,7 @@ import coil.request.ImageRequest
 import com.checkin.partner.network.dto.TaskWithStatus
 import com.checkin.partner.ui.components.ScaleButton
 import com.checkin.partner.ui.components.HomeSkeleton
+import com.checkin.partner.ui.components.rememberSmoothFlingBehavior
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -158,6 +159,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp),
+                    flingBehavior = rememberSmoothFlingBehavior(),
                 ) {
                 item(key = "header", contentType = "header") {
                     HomeHeader(
