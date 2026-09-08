@@ -496,8 +496,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // ── 看板 ──
 
-    fun refreshDashboard() {
-        if (dashboardRefreshJob?.isActive == true) return
+    // onDone 在本次刷新真正完成后调用（成功/失败都调；若撞上正在跑的旧刷新，
+    // 则等旧刷新结束后再补刷一次，保证调用方拿到最新数据且 onDone 不丢失）
+    fun refreshDashboard(onDone: (() -> Unit)? = null) {
+        val running = dashboardRefreshJob
+        if (running?.isActive == true) {
+            viewModelScope.launch {
+                try { running.join() } catch (_: Exception) { }
+                refreshDashboard(onDone)
+            }
+            return
+        }
         dashboardRefreshJob = viewModelScope.launch {
             try {
                 val res = api.getDashboard()
@@ -526,6 +535,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             } finally {
                 _dashboardLoaded.value = true
                 dashboardRefreshJob = null
+                onDone?.invoke()
             }
         }
     }
@@ -687,11 +697,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                             streak = _dashboard.value?.myData?.streak ?: 0,
                         )
                     }
-                    refreshDashboard()
+                    refreshDashboard(onDone = {
+                        // 看板已更新（checkedIn=true 生效）后再解除"提交中"，
+                        // 按钮从"打卡中"直接切"已完成"，中间不闪回"打卡"
+                        _checkingTaskIds.value = _checkingTaskIds.value - taskId
+                    })
                 } else {
                     // 非 2xx 时 body() 为 null，真实原因（401 登录过期 / 409 已打卡 / 400 时间窗）在 errorBody 里
                     _error.value = if (res.code() == 401) "登录已过期，请重新登录"
                         else errorMessageOf(res) ?: "打卡失败"
+                    _checkingTaskIds.value = _checkingTaskIds.value - taskId
                 }
             } catch (e: IOException) {
                 // 网络异常：存入本地队列，网络恢复后自动补打，打卡不丢失
@@ -703,10 +718,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 ))
                 loadPendingCheckinState()
                 _error.value = "网络异常，打卡已保存，联网后自动补打"
+                _checkingTaskIds.value = _checkingTaskIds.value - taskId
             } catch (e: Exception) {
                 _error.value = e.message ?: "网络错误"
-            } finally {
                 _checkingTaskIds.value = _checkingTaskIds.value - taskId
+            } finally {
                 _isLoading.value = false
             }
         }

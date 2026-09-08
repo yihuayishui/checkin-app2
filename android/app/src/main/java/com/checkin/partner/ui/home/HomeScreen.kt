@@ -54,6 +54,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     val isVacation by viewModel.isVacation.collectAsStateWithLifecycle()
     val avatarUrl by viewModel.avatarUrl.collectAsStateWithLifecycle()
     val achievementUnlocked by viewModel.achievementUnlocked.collectAsStateWithLifecycle()
+    val checkinSuccess by viewModel.checkinSuccess.collectAsStateWithLifecycle()
     val checkingTaskIds by viewModel.checkingTaskIds.collectAsStateWithLifecycle()
 
     // 只在 dashboard 变化时重新计算列表，滚动过程中不重复创建空列表和分组对象。
@@ -108,6 +109,25 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
             dismissButton = {
                 TextButton(onClick = { viewModel.clearAchievementUnlocked() }) { Text("好的") }
             }
+        )
+    }
+
+    // 打卡成功弹窗（与成就弹窗互斥：有新成就时只弹成就窗，此处 checkinSuccess 为 null）
+    checkinSuccess?.let { s ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearCheckinSuccess() },
+            icon = { Text("✅", style = MaterialTheme.typography.headlineLarge) },
+            title = { Text("打卡成功", fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    (if (s.taskName.isNotBlank()) "「${s.taskName}」" else "本次打卡") +
+                        "完成啦！个人积分 +${s.personalPoints}，奖励池 +${s.poolPoints}" +
+                        if (s.streak > 0) "，已连续打卡 ${s.streak} 天" else ""
+                )
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.clearCheckinSuccess() }) { Text("太棒了") }
+            },
         )
     }
 
