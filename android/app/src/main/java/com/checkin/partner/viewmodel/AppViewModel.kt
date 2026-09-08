@@ -106,13 +106,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearCheckinSuccess() { _checkinSuccess.value = null }
 
-    // ── 打卡按钮乐观更新 ──
-    // 点击"打卡"后立即本地置为已完成（不等网络），避免"点击后要等一会儿才变已完成"的错觉。
-    // 服务端最终状态以 dashboard 刷新为准；失败/回滚时从乐观集合移除，按钮恢复可点。
-    private val _optimisticCheckin = MutableStateFlow<Set<String>>(emptySet())
-    val optimisticCheckin: StateFlow<Set<String>> = _optimisticCheckin.asStateFlow()
-
-    // 正在提交打卡的任务 id（按钮显示加载中，防重复点击）
+    // ── 打卡按钮提交中状态 ──
+    // 正在提交打卡的任务 id：仅驱动按钮"提交中"动画（加载转圈 + 防重复点击），
+    // 不改变任务的已完成状态——"是否已完成"只认服务端 dashboard 的 checkedIn，本地绝不提前写死。
     private val _checkingTaskIds = MutableStateFlow<Set<String>>(emptySet())
     val checkingTaskIds: StateFlow<Set<String>> = _checkingTaskIds.asStateFlow()
 
@@ -657,9 +653,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // ── 打卡 ──
 
     fun doCheckin(taskId: String, note: String? = null, imageUrl: String? = null) {
-        // 乐观更新：点击立即显示"已完成"，不等网络返回；成功后随 dashboard 刷新自然对齐
+        if (_checkingTaskIds.value.contains(taskId)) return // 已在提交中，防重复点击
         _checkingTaskIds.value = _checkingTaskIds.value + taskId
-        _optimisticCheckin.value = _optimisticCheckin.value + taskId
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -697,11 +692,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     // 非 2xx 时 body() 为 null，真实原因（401 登录过期 / 409 已打卡 / 400 时间窗）在 errorBody 里
                     _error.value = if (res.code() == 401) "登录已过期，请重新登录"
                         else errorMessageOf(res) ?: "打卡失败"
-                    // 打卡失败：回滚乐观状态，按钮恢复
-                    _optimisticCheckin.value = _optimisticCheckin.value - taskId
                 }
             } catch (e: IOException) {
-                // 网络异常：存入本地队列，网络恢复后自动补打，打卡不丢失（保留乐观"已完成"态，待补发）
+                // 网络异常：存入本地队列，网络恢复后自动补打，打卡不丢失
                 db.pendingCheckinDao().insert(PendingCheckinEntity(
                     recordId = recordId,
                     taskId = taskId, userId = _currentUserId.value,
@@ -712,7 +705,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 _error.value = "网络异常，打卡已保存，联网后自动补打"
             } catch (e: Exception) {
                 _error.value = e.message ?: "网络错误"
-                _optimisticCheckin.value = _optimisticCheckin.value - taskId
             } finally {
                 _checkingTaskIds.value = _checkingTaskIds.value - taskId
                 _isLoading.value = false
