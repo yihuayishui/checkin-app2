@@ -56,6 +56,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
     val achievementUnlocked by viewModel.achievementUnlocked.collectAsStateWithLifecycle()
     val checkinSuccess by viewModel.checkinSuccess.collectAsStateWithLifecycle()
     val checkingTaskIds by viewModel.checkingTaskIds.collectAsStateWithLifecycle()
+    val pendingCheckinTaskIds by viewModel.pendingCheckinTaskIds.collectAsStateWithLifecycle()
 
     // 只在 dashboard 变化时重新计算列表，滚动过程中不重复创建空列表和分组对象。
     val myData = dashboard?.myData
@@ -198,6 +199,7 @@ fun HomeScreen(navController: NavController, viewModel: AppViewModel) {
                             onCheckin = checkinAction,
                             onDetail = detailAction,
                             isChecking = ts.task.taskId in checkingTaskIds,
+                            isPending = ts.task.taskId in pendingCheckinTaskIds,
                         )
                     }
                 }
@@ -399,6 +401,7 @@ fun TodayTaskCard(
     onCheckin: (String) -> Unit,
     onDetail: (String) -> Unit,
     isChecking: Boolean = false,
+    isPending: Boolean = false,
 ) {
     val freqLabel = when (ts.task.frequency) {
         "DAILY" -> "每日"
@@ -443,6 +446,8 @@ fun TodayTaskCard(
                 done -> Box(Modifier.graphicsLayer(scaleX = doneScale, scaleY = doneScale)) {
                     StatusPill("✓ 已完成", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
                 }
+                // 离线已保存、待网络恢复自动补发：显示"待同步"而非"打卡"，避免用户反复点击重复入队
+                isPending -> StatusPill("⏳ 待同步", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
                 else -> ScaleButton(
                     onClick = { onCheckin(ts.task.taskId) },
                     enabled = !isChecking,

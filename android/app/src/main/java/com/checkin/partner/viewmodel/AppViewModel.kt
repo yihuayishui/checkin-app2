@@ -706,6 +706,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     // 非 2xx 时 body() 为 null，真实原因（401 登录过期 / 409 已打卡 / 400 时间窗）在 errorBody 里
                     _error.value = if (res.code() == 401) "登录已过期，请重新登录"
                         else errorMessageOf(res) ?: "打卡失败"
+                    if (res.code() == 409) {
+                        // 409=服务端已有打卡记录：刷新看板对齐，按钮直接显示"已完成"而非可点的"打卡"
+                        refreshDashboard()
+                    }
                     _checkingTaskIds.value = _checkingTaskIds.value - taskId
                 }
             } catch (e: IOException) {
