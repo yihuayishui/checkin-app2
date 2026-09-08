@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.checkin.partner.data.entity.RewardEntity
 import com.checkin.partner.ui.components.RewardListSkeleton
 import com.checkin.partner.ui.components.ScaleButton
+import com.checkin.partner.ui.components.rememberSmoothFlingBehavior
 import com.checkin.partner.ui.theme.PinkContainer
 import com.checkin.partner.ui.theme.PinkPrimary
 import com.checkin.partner.viewmodel.AppViewModel
@@ -68,6 +69,7 @@ fun RewardListScreen(navController: NavController, viewModel: AppViewModel) {
                 Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
+                flingBehavior = rememberSmoothFlingBehavior(),
             ) {
                 if (!rewardsLoaded) {
                     item { RewardListSkeleton() }

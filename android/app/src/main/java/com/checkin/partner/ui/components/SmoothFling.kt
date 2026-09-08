@@ -35,9 +35,9 @@ class SmoothFlingBehavior(
     }
 }
 
-/** 首页列表用的顺滑 fling（remember 缓存，跨重组复用）：指数衰减 + 低摩擦 */
+/** 全 App 列表用的顺滑 fling（remember 缓存，跨重组复用）：指数衰减 + 低摩擦 */
 @Composable
 fun rememberSmoothFlingBehavior(): FlingBehavior {
-    val decay = remember { exponentialDecay<Float>(frictionMultiplier = 0.12f) }
+    val decay = remember { exponentialDecay<Float>(frictionMultiplier = 0.25f) }
     return remember(decay) { SmoothFlingBehavior(decay) }
 }

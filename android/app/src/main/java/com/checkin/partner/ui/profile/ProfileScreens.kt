@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.checkin.partner.ui.components.ProfileSkeleton
+import com.checkin.partner.ui.components.rememberSmoothFlingBehavior
 import com.checkin.partner.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +69,7 @@ fun ProfileScreen(navController: NavController, viewModel: AppViewModel) {
             Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
+            flingBehavior = rememberSmoothFlingBehavior(),
         ) {
             item {
                 ProfileHeaderCard(
@@ -228,7 +230,7 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
             )
         )}
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), flingBehavior = rememberSmoothFlingBehavior()) {
 
             // ── 打卡提醒 ──
             item {
@@ -428,7 +430,7 @@ fun PointsHistoryScreen(navController: NavController, viewModel: AppViewModel) {
                     Text("暂无积分记录", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), flingBehavior = rememberSmoothFlingBehavior()) {
                     items(filtered) { tx ->
                     val isEarn = tx.type == "EARN"
                     Card(Modifier.fillMaxWidth()) {
@@ -489,7 +491,7 @@ fun NotificationsScreen(navController: NavController, viewModel: AppViewModel) {
                 Text("暂无通知", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
-            LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp), flingBehavior = rememberSmoothFlingBehavior()) {
                 items(notifications) { notif ->
                     Card(
                         Modifier.fillMaxWidth(),
@@ -545,7 +547,7 @@ fun AchievementsScreen(navController: NavController, viewModel: AppViewModel) {
             )
         )}
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), flingBehavior = rememberSmoothFlingBehavior()) {
             if (achievements.isEmpty()) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {

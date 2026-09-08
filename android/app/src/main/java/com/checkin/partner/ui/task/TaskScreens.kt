@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.checkin.partner.data.entity.TaskEntity
 import com.checkin.partner.ui.components.TaskListSkeleton
+import com.checkin.partner.ui.components.rememberSmoothFlingBehavior
 import com.checkin.partner.ui.theme.PinkContainer
 import com.checkin.partner.ui.theme.PinkPrimary
 import com.checkin.partner.viewmodel.AppViewModel
@@ -123,7 +124,8 @@ fun TaskListScreen(navController: NavController, viewModel: AppViewModel) {
             } else {
                 LazyColumn(
                     Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    flingBehavior = rememberSmoothFlingBehavior(),
                 ) {
                     items(sortedTasks) { task ->
                         TaskCard(task, currentUserId,
