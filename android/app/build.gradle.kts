@@ -24,8 +24,8 @@ android {
         }
 
         // 后端地址（可通过 buildConfig 或 preferences 修改）
-        buildConfigField("String", "BASE_URL", "\"http://198.46.252.178:3001\"")
-        buildConfigField("String", "WS_URL", "\"http://198.46.252.178:3001\"")
+        buildConfigField("String", "BASE_URL", "\"http://198.46.252.20:3001\"")
+        buildConfigField("String", "WS_URL", "\"http://198.46.252.20:3001\"")
 
         // 极光推送占位符
         manifestPlaceholders["JPUSH_PKGNAME"] = "com.checkin.partner"
