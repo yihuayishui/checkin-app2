@@ -23,9 +23,9 @@ android {
             useSupportLibrary = true
         }
 
-        // 后端地址（可通过 buildConfig 或 preferences 修改）
-        buildConfigField("String", "BASE_URL", "\"http://198.46.252.20:3001\"")
-        buildConfigField("String", "WS_URL", "\"http://198.46.252.20:3001\"")
+        // 后端地址（用域名而非 IP：换服务器只需改 DNS 记录，客户端无需重新打包）
+        buildConfigField("String", "BASE_URL", "\"http://checkinpartner.duckdns.org:3001\"")
+        buildConfigField("String", "WS_URL", "\"http://checkinpartner.duckdns.org:3001\"")
 
         // 极光推送占位符
         manifestPlaceholders["JPUSH_PKGNAME"] = "com.checkin.partner"
