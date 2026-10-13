@@ -23,9 +23,9 @@ android {
             useSupportLibrary = true
         }
 
-        // 后端地址（用域名而非 IP：换服务器只需改 DNS 记录，客户端无需重新打包）
-        buildConfigField("String", "BASE_URL", "\"http://checkinpartner.duckdns.org:3001\"")
-        buildConfigField("String", "WS_URL", "\"http://checkinpartner.duckdns.org:3001\"")
+        // 后端地址：Cloudflare Tunnel 域名（源站 IP 不暴露，换服务器只需重跑 cloudflared，客户端零改动）
+        buildConfigField("String", "BASE_URL", "\"https://checkin.charonlab.top\"")
+        buildConfigField("String", "WS_URL", "\"https://checkin.charonlab.top\"")
 
         // 极光推送占位符
         manifestPlaceholders["JPUSH_PKGNAME"] = "com.checkin.partner"
