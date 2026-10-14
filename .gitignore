@@ -1,5 +1,6 @@
 # ── 敏感信息（禁止上传） ──
 handoff.md
+handoff.md.bak-*
 *service-account*.json
 *-firebase-adminsdk-*.json
 google-services.json
