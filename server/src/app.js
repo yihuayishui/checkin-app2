@@ -62,6 +62,8 @@ app.use('/api/v1/export', require('./api/v1/export-route'));
 app.use('/api/v1/sync', require('./api/v1/sync-route'));
 app.use('/api/v1/guide', require('./api/v1/guide-route'));
 app.use('/api/v1/config', require('./api/v1/config-route'));
+// 数据库备份下载（供路由器 cron 异地备份，x-api-key 鉴权）
+app.use('/api/v1/backup', require('./api/v1/backup-route'));
 
 // 错误处理
 app.use(errorHandler);
